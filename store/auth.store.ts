@@ -1,4 +1,4 @@
-import { getCurrentUser } from '@/lib/appwrite'
+import { getCurrentUser } from '@/lib/supabase'
 import { User } from '@/type'
 import { create } from 'zustand'
 
@@ -29,7 +29,7 @@ const useAuthStore = create<AuthState>((set) => ({
         try {
             const user = await getCurrentUser()
 
-            if (user) set({isAuthenticated: true, user: user as User})
+            if (user) set({isAuthenticated: true, user})
             else set({isAuthenticated: false, user: null})
         } catch (error) {
             console.log('fetchAuthenticatedUser error', error)

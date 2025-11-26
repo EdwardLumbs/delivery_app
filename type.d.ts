@@ -1,6 +1,10 @@
-import { Models } from "react-native-appwrite";
+// Base interface for database records
+export interface BaseRecord {
+    id: string;
+    created_at: string;
+}
 
-export interface MenuItem extends Models.Document {
+export interface MenuItem extends BaseRecord {
     name: string;
     price: number;
     image_url: string;
@@ -8,18 +12,29 @@ export interface MenuItem extends Models.Document {
     calories: number;
     protein: number;
     rating: number;
-    type: string;
+    category_id: string;
 }
 
-export interface Category extends Models.Document {
+export interface Category extends BaseRecord {
     name: string;
     description: string;
 }
 
-export interface User extends Models.Document {
+export interface User extends BaseRecord {
     name: string;
     email: string;
     avatar: string;
+}
+
+export interface Customization extends BaseRecord {
+    name: string;
+    price: number;
+    type: string;
+}
+
+export interface MenuCustomization extends BaseRecord {
+    menu_id: string;
+    customization_id: string;
 }
 
 export interface CartCustomization {

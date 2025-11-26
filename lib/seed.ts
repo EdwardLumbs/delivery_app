@@ -1,6 +1,5 @@
-import { ID } from "react-native-appwrite";
-import { appwriteConfig, databases, storage } from "./appwrite";
 import dummyData from "./data";
+import { supabase } from "./supabase";
 
 interface Category {
     name: string;
@@ -10,7 +9,7 @@ interface Category {
 interface Customization {
     name: string;
     price: number;
-    type: "topping" | "side" | "size" | "crust" | string; // extend as needed
+    type: "topping" | "side" | "size" | "crust" | string;
 }
 
 interface MenuItem {
@@ -22,7 +21,7 @@ interface MenuItem {
     calories: number;
     protein: number;
     category_name: string;
-    customizations: string[]; // list of customization names
+    customizations: string[];
 }
 
 interface DummyData {
@@ -31,126 +30,96 @@ interface DummyData {
     menu: MenuItem[];
 }
 
-// ensure dummyData has correct shape
 const data = dummyData as DummyData;
 
-async function clearAll(collectionId: string): Promise<void> {
-    const list = await databases.listDocuments(
-        appwriteConfig.databaseId,
-        collectionId
-    );
+async function clearTable(tableName: string): Promise<void> {
+    const { error } = await supabase
+        .from(tableName)
+        .delete()
+        .neq('id', '00000000-0000-0000-0000-000000000000') // Delete all rows
 
-    await Promise.all(
-        list.documents.map((doc) =>
-            databases.deleteDocument(appwriteConfig.databaseId, collectionId, doc.$id)
-        )
-    );
-}
-
-async function clearStorage(): Promise<void> {
-    const list = await storage.listFiles(appwriteConfig.bucketId);
-
-    await Promise.all(
-        list.files.map((file) =>
-            storage.deleteFile(appwriteConfig.bucketId, file.$id)
-        )
-    );
-}
-
-async function uploadImageToStorage(imageUrl: string) {
-    const response = await fetch(imageUrl);
-    const blob = await response.blob();
-
-    const fileObj = {
-        name: imageUrl.split("/").pop() || `file-${Date.now()}.jpg`,
-        type: blob.type,
-        size: blob.size,
-        uri: imageUrl,
-    };
-
-    const file = await storage.createFile(
-        appwriteConfig.bucketId,
-        ID.unique(),
-        fileObj
-    );
-
-    return storage.getFileViewURL(appwriteConfig.bucketId, file.$id);
+    if (error) console.log(`Error clearing ${tableName}:`, error)
 }
 
 async function seed(): Promise<void> {
-    // 1. Clear all
-    await clearAll(appwriteConfig.categoriesCollectionId);
-    await clearAll(appwriteConfig.customizationsCollectionId);
-    await clearAll(appwriteConfig.menuCollectionId);
-    await clearAll(appwriteConfig.menuCustomizationCollectionId);
-    await clearStorage();
+    console.log('🌱 Starting seed...')
 
-    // 2. Create Categories
-    const categoryMap: Record<string, string> = {};
-    for (const cat of data.categories) {
-        const doc = await databases.createDocument(
-            appwriteConfig.databaseId,
-            appwriteConfig.categoriesCollectionId,
-            ID.unique(),
-            cat
-        );
-        categoryMap[cat.name] = doc.$id;
-    }
+    try {
+        // 1. Clear all tables
+        console.log('Clearing tables...')
+        await clearTable('menu_customizations')
+        await clearTable('menu')
+        await clearTable('customizations')
+        await clearTable('categories')
 
-    // 3. Create Customizations
-    const customizationMap: Record<string, string> = {};
-    for (const cus of data.customizations) {
-        const doc = await databases.createDocument(
-            appwriteConfig.databaseId,
-            appwriteConfig.customizationsCollectionId,
-            ID.unique(),
-            {
-                name: cus.name,
-                price: cus.price,
-                type: cus.type,
+        // 2. Create Categories
+        console.log('Creating categories...')
+        const { data: categoriesData, error: categoriesError } = await supabase
+            .from('categories')
+            .insert(data.categories)
+            .select()
+
+        if (categoriesError) throw categoriesError
+
+        const categoryMap: Record<string, string> = {}
+        categoriesData.forEach((cat: any) => {
+            categoryMap[cat.name] = cat.id
+        })
+
+        // 3. Create Customizations
+        console.log('Creating customizations...')
+        const { data: customizationsData, error: customizationsError } = await supabase
+            .from('customizations')
+            .insert(data.customizations)
+            .select()
+
+        if (customizationsError) throw customizationsError
+
+        const customizationMap: Record<string, string> = {}
+        customizationsData.forEach((cus: any) => {
+            customizationMap[cus.name] = cus.id
+        })
+
+        // 4. Create Menu Items
+        console.log('Creating menu items...')
+        for (const item of data.menu) {
+            const { data: menuData, error: menuError } = await supabase
+                .from('menu')
+                .insert({
+                    name: item.name,
+                    description: item.description,
+                    image_url: item.image_url,
+                    price: item.price,
+                    rating: item.rating,
+                    calories: item.calories,
+                    protein: item.protein,
+                    category_id: categoryMap[item.category_name],
+                })
+                .select()
+                .single()
+
+            if (menuError) throw menuError
+
+            // 5. Create menu_customizations relationships
+            const menuCustomizations = item.customizations.map(cusName => ({
+                menu_id: menuData.id,
+                customization_id: customizationMap[cusName],
+            }))
+
+            if (menuCustomizations.length > 0) {
+                const { error: mcError } = await supabase
+                    .from('menu_customizations')
+                    .insert(menuCustomizations)
+
+                if (mcError) throw mcError
             }
-        );
-        customizationMap[cus.name] = doc.$id;
-    }
-
-    // 4. Create Menu Items
-    const menuMap: Record<string, string> = {};
-    for (const item of data.menu) {
-        const uploadedImage = await uploadImageToStorage(item.image_url);
-
-        const doc = await databases.createDocument(
-            appwriteConfig.databaseId,
-            appwriteConfig.menuCollectionId,
-            ID.unique(),
-            {
-                name: item.name,
-                description: item.description,
-                image_url: uploadedImage,
-                price: item.price,
-                rating: item.rating,
-                calories: item.calories,
-                protein: item.protein,
-                categories: categoryMap[item.category_name],
-            }
-        );
-
-        menuMap[item.name] = doc.$id;
-
-        // 5. Create menu_customizations
-        for (const cusName of item.customizations) {
-            await databases.createDocument(
-                appwriteConfig.databaseId,
-                appwriteConfig.menuCustomizationCollectionId,
-                ID.unique(),
-                {
-                    menu: doc.$id,
-                    customizations: customizationMap[cusName],
-                }
-            );
         }
-    }
 
-    console.log("✅ Seeding complete.");
+        console.log('✅ Seeding complete!')
+    } catch (error: any) {
+        console.error('❌ Seeding failed:', error.message)
+        throw error
+    }
 }
 
 export default seed;

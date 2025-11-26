@@ -2,8 +2,8 @@ import CartButton from '@/components/CartButton'
 import Filter from '@/components/Filter'
 import MenuCard from '@/components/MenuCard'
 import SearchBar from '@/components/SearchBar'
-import { getCategories, getMenu } from '@/lib/appwrite'
-import useAppwrite from '@/lib/useAppwrite'
+import { getCategories, getMenu } from '@/lib/queries'
+import { useSupabase } from '@/lib/useSupabase'
 import { MenuItem } from '@/type'
 import cn from 'clsx'
 import { useLocalSearchParams } from 'expo-router'
@@ -14,7 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 const Search = () => {
     const {category, query} = useLocalSearchParams<{query: string; category: string}>()
 
-    const { data, refetch, loading } = useAppwrite({
+    const { data, refetch, loading } = useSupabase({
         fn: getMenu,
         params: {
             category,
@@ -22,7 +22,7 @@ const Search = () => {
             limit: 6
         }
     })
-    const { data: categories } = useAppwrite({
+    const { data: categories } = useSupabase({
         fn: getCategories
     })
 
@@ -45,7 +45,7 @@ const Search = () => {
                         </View>
                     )
                 }}
-                keyExtractor={item => item.$id}
+                keyExtractor={item => item.id}
                 numColumns={2}
                 columnWrapperClassName='gap-7'
                 contentContainerClassName='gap-7 px-5 pb-32'
