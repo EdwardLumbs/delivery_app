@@ -28,7 +28,7 @@ const Search = () => {
 
     useEffect(() => {
         refetch({category, query, limit: 6})
-    }, [category, query])
+    }, [category, query, refetch])
 
     return (
         <SafeAreaView className='bg-white h-full'>
@@ -38,14 +38,14 @@ const Search = () => {
                     const isFirstRightColItem = index % 2 === 0
 
                     return (
-                        <View key={index} className={cn('flex-1 max-w-[48%]', !isFirstRightColItem ? 'mt-10': 'mt-0')}>
+                        <View className={cn('flex-1 max-w-[48%]', !isFirstRightColItem ? 'mt-10': 'mt-0')}>
                             <MenuCard
                                 item={item as MenuItem}
                             />
                         </View>
                     )
                 }}
-                keyExtractor={item => item.id}
+                keyExtractor={(item, index) => `${item.id}-${index}`}
                 numColumns={2}
                 columnWrapperClassName='gap-7'
                 contentContainerClassName='gap-7 px-5 pb-32'

@@ -82,8 +82,22 @@ export const useCartStore = create<CartStore>((set, get) => ({
     getTotalItems: () =>
         get().items.reduce((total, item) => total + item.quantity, 0),
 
+    toggleExcluded: (id, customizations = []) => {
+        set({
+            items: get().items.map((i) =>
+                i.id === id &&
+                areCustomizationsEqual(i.customizations ?? [], customizations)
+                    ? { ...i, isExcluded: !i.isExcluded }
+                    : i
+            ),
+        });
+    },
+
     getTotalPrice: () =>
         get().items.reduce((total, item) => {
+            // Skip excluded items
+            if (item.isExcluded) return total;
+            
             const base = item.price;
             const customPrice =
                 item.customizations?.reduce(

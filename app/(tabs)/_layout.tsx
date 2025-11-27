@@ -75,6 +75,12 @@ export default function TabLayout() {
                     tabBarIcon: ({ focused }) => <TabBarIcon title="Profile" icon={images.person} focused={focused}/>
                 }}
             />
+            <Tabs.Screen
+                name="edit-profile"
+                options={{
+                    href: null,
+                }}
+            />
         </Tabs>
     )
 }

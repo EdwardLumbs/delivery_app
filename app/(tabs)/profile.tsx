@@ -3,9 +3,10 @@ import CustomHeader from '@/components/CustomHeader'
 import { images } from '@/constants'
 import { signOut } from '@/lib/supabase'
 import useAuthStore from '@/store/auth.store'
+import cn from 'clsx'
 import { router } from 'expo-router'
 import { useState } from 'react'
-import { Alert, Image, ScrollView, Text, View } from 'react-native'
+import { Alert, Image, ScrollView, Text, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 const Profile = () => {
@@ -35,7 +36,7 @@ const Profile = () => {
     }
 
     const handleEdit = () => {
-
+        router.push('/edit-profile')
     }
 
     return (
@@ -43,10 +44,18 @@ const Profile = () => {
             <ScrollView contentContainerClassName='pb-28 px-5 pt-5'>
                 <CustomHeader title='Profile' />
                 <View className='gap-5 items-center'>
-                    <Image 
-                        className='profile-avatar'
-                        source={user?.avatar ? { uri: user.avatar } : images.person}
-                    />
+                    <TouchableOpacity>
+                        <Image 
+                            className='profile-avatar'
+                            source={user?.avatar ? { uri: user.avatar } : images.person}
+                        />
+                        <View className='profile-edit'>
+                            <Image 
+                                source={images.pencil}
+                                className='size-4'
+                            />
+                        </View>
+                    </TouchableOpacity>
                     <View className='bg-white p-5 rounded-xl gap-5 w-full'>
                         <View className='profile-field'>
                             <View className='profile-field__icon'>
@@ -56,9 +65,9 @@ const Profile = () => {
                                     resizeMode={"contain"}
                                 />
                             </View>
-                            <View>
+                            <View className='flex-1'>
                                 <Text className='body-medium text-gray-100'>Full Name</Text>
-                                <Text className='base-regular'>{user?.name}</Text>
+                                <Text className='base-regular' numberOfLines={2} ellipsizeMode='tail'>{user?.name}</Text>
                             </View>
                         </View>
                         <View className='profile-field'>
@@ -69,9 +78,9 @@ const Profile = () => {
                                     resizeMode={"contain"}
                                 />
                             </View>
-                            <View>
+                            <View className='flex-1'>
                                 <Text className='body-medium text-gray-100'>Email</Text>
-                                <Text className='base-regular'>{user?.email}</Text>
+                                <Text className='base-regular' numberOfLines={2} ellipsizeMode='tail'>{user?.email}</Text>
                             </View>
                         </View>
                         <View className='profile-field'>
@@ -82,9 +91,15 @@ const Profile = () => {
                                     resizeMode={"contain"}
                                 />
                             </View>
-                            <View>
+                            <View className='flex-1'>
                                 <Text className='body-medium text-gray-100'>Phone Number</Text>
-                                <Text className='base-regular'>{user?.phone_number}</Text>
+                                <Text 
+                                    className={cn('base-regular', !user?.phone_number && 'text-gray-200')}
+                                    numberOfLines={2}
+                                    ellipsizeMode='tail'
+                                >
+                                    {user?.phone_number || 'No Phone Number Registered'}
+                                </Text>
                             </View>
                         </View>
                         <View className='profile-field'>
@@ -95,9 +110,15 @@ const Profile = () => {
                                     resizeMode={"contain"}
                                 />
                             </View>
-                            <View>
+                            <View className='flex-1'>
                                 <Text className='body-medium text-gray-100'>Address 1</Text>
-                                <Text className='base-regular'>{user?.address_1}</Text>
+                                <Text 
+                                    className={cn('base-regular', !user?.address_1 && 'text-gray-200')}
+                                    numberOfLines={2}
+                                    ellipsizeMode='tail'
+                                >
+                                    {user?.address_1 || 'No Address Registered'}
+                                </Text>
                             </View>
                         </View>
                         <View className='profile-field'>
@@ -108,9 +129,15 @@ const Profile = () => {
                                     resizeMode={"contain"}
                                 />
                             </View>
-                            <View>
+                            <View className='flex-1'>
                                 <Text className='body-medium text-gray-100'>Address 2</Text>
-                                <Text className='base-regular'>{user?.address_2}</Text>
+                                <Text 
+                                    className={cn('base-regular', !user?.address_2 && 'text-gray-200')}
+                                    numberOfLines={2}
+                                    ellipsizeMode='tail'
+                                >
+                                    {user?.address_2 || 'No Address Registered'}
+                                </Text>
                             </View>
                         </View>
                     </View>
@@ -127,7 +154,7 @@ const Profile = () => {
                             isLoading={isSubmitting}
                             leftIcon={
                                 <Image 
-                                    className='profile-field__icon size-6'
+                                    className='size-6 rounded-full flex items-center justify-center mr-3'
                                     source={images.logout}
                                 />
                             }

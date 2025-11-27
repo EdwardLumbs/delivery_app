@@ -1,14 +1,29 @@
 import { images } from "@/constants";
 import { useCartStore } from "@/store/cart.store";
 import { CartItemType } from "@/type";
+import cn from "clsx";
 import { Image, Text, TouchableOpacity, View } from "react-native";
 
 const CartItem = ({ item }: { item: CartItemType }) => {
-    const { increaseQty, decreaseQty, removeItem } = useCartStore();
+    const { increaseQty, decreaseQty, removeItem, toggleExcluded } = useCartStore();
+    const isExcluded = item.isExcluded || false;
 
     return (
-        <View className="cart-item">
+        <View className={cn("cart-item", isExcluded && "opacity-50")}>
             <View className="flex flex-row items-center gap-x-3">
+                <TouchableOpacity 
+                    onPress={() => toggleExcluded(item.id, item.customizations!)}
+                    className={`size-6 rounded-md border-2 flex-center ${!isExcluded ? 'bg-primary border-primary' : 'border-gray-200'}`}
+                >
+                    {!isExcluded && (
+                        <Image 
+                            source={images.check}
+                            className="size-4"
+                            resizeMode="contain"
+                            tintColor="white"
+                        />
+                    )}
+                </TouchableOpacity>
                 <View className="cart-item__image">
                     <Image
                         source={{ uri: item.image_url }}

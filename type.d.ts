@@ -54,6 +54,7 @@ export interface CartItemType {
     image_url: string;
     quantity: number;
     customizations?: CartCustomization[];
+    isExcluded?: boolean;
 }
 
 export interface CartStore {
@@ -62,6 +63,7 @@ export interface CartStore {
     removeItem: (id: string, customizations: CartCustomization[]) => void;
     increaseQty: (id: string, customizations: CartCustomization[]) => void;
     decreaseQty: (id: string, customizations: CartCustomization[]) => void;
+    toggleExcluded: (id: string, customizations: CartCustomization[]) => void;
     clearCart: () => void;
     getTotalItems: () => number;
     getTotalPrice: () => number;

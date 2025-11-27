@@ -23,6 +23,14 @@ const Cart = () => {
 
     const totalItems = getTotalItems()
     const totalPrice = getTotalPrice()
+    
+    // Check if all items are excluded
+    const allExcluded = items.length > 0 && items.every(item => item.isExcluded)
+    const hasIncludedItems = totalPrice > 0
+    
+    const deliveryFee = hasIncludedItems ? 5 : 0
+    const discount = hasIncludedItems ? 0.5 : 0
+    const finalTotal = totalPrice + deliveryFee - discount
 
     return (
         <SafeAreaView
@@ -47,21 +55,25 @@ const Cart = () => {
                             />
                             <PaymentInfoStripe 
                                 label={`Delivery Fee`}
-                                value={`$5`}
+                                value={`$${deliveryFee.toFixed(2)}`}
                             />
                             <PaymentInfoStripe 
                                 label={`Discount`}
-                                value={`- $ 0.5`}
+                                value={`- $${discount.toFixed(2)}`}
                                 valueStyle='!text-success'
                             />
                             <View className='border-t border-gray-300 my-2' />
                             <PaymentInfoStripe 
                                 label={`Total (${totalItems})`}
-                                value={`$${(totalPrice + 5 - 0.5).toFixed(2)}`}
+                                value={`$${finalTotal.toFixed(2)}`}
                                 labelStyle='base-bold !text-dark-100'
                                 valueStyle='base-bold !text-dark-100 !text-right'
                             />
-                            <CustomButton title='Order Now' />
+                            <CustomButton 
+                                title={allExcluded ? 'No Items Selected' : 'Order Now'}
+                                onPress={() => {}}
+                                style={allExcluded ? 'opacity-50' : ''}
+                            />
                         </View>
                     </View>
                 )}

@@ -156,3 +156,27 @@ export const getCurrentUser = async (): Promise<User | null> => {
         return null
     }
 }
+
+export const updateUser = async (userId: string, updates: Partial<User>) => {
+    try {
+        console.log('updateUser: Updating user profile...', userId)
+
+        const { data, error } = await supabase
+            .from('users')
+            .update(updates)
+            .eq('id', userId)
+            .select()
+            .single()
+
+        if (error) {
+            console.log('updateUser error:', error)
+            throw error
+        }
+
+        console.log('updateUser: Profile updated successfully!')
+        return data as User
+    } catch (error: any) {
+        console.log('updateUser failed:', error)
+        throw new Error(error.message)
+    }
+}
