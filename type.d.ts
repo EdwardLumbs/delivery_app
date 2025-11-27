@@ -24,6 +24,9 @@ export interface User extends BaseRecord {
     name: string;
     email: string;
     avatar: string;
+    phone_number: string;
+    address_1: string;
+    address_2: string
 }
 
 export interface Customization extends BaseRecord {

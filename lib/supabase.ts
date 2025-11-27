@@ -5,7 +5,7 @@ import 'react-native-url-polyfill/auto'
 
 export const supabaseConfig = {
     url: process.env.EXPO_PUBLIC_SUPABASE_URL!,
-    anonKey: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY!,
+    anonKey: process.env.EXPO_PUBLIC_SUPABASE_KEY!,
 }
 
 export const supabase = createClient(
@@ -23,7 +23,9 @@ export const supabase = createClient(
 
 export const createUser = async ({email, password, name}: CreateUserParams) => {
     try {
-        // Sign up the user
+        console.log('1. Starting sign up for:', email)
+        
+        // Sign up the user (this also creates a session automatically!)
         const { data: authData, error: authError } = await supabase.auth.signUp({
             email,
             password,
@@ -34,13 +36,21 @@ export const createUser = async ({email, password, name}: CreateUserParams) => {
             }
         })
 
-        if (authError) throw authError
-        if (!authData.user) throw new Error('User creation failed')
+        if (authError) {
+            console.log('2. Sign up error:', authError)
+            throw authError
+        }
+        
+        if (!authData.user) {
+            console.log('2. No user returned from signUp')
+            throw new Error('User creation failed')
+        }
 
-        // Sign in automatically after signup
-        await signIn({ email, password })
+        console.log('2. Auth user created:', authData.user.id)
+        console.log('3. Session created:', !!authData.session)
 
         // Create user profile in database
+        console.log('4. Creating user profile...')
         const { data: userData, error: userError } = await supabase
             .from('users')
             .insert({
@@ -52,10 +62,19 @@ export const createUser = async ({email, password, name}: CreateUserParams) => {
             .select()
             .single()
 
-        if (userError) throw userError
+        if (userError) {
+            console.log('5. Profile creation error:', userError)
+            throw userError
+        }
 
+        console.log('5. Profile created successfully!')
+        console.log('6. User is now signed in automatically (no need to call signIn)!')
+        
+        // No need to call signIn() - user is already signed in from signUp()!
+        
         return userData
     } catch (error: any) {
+        console.log('createUser failed:', error)
         throw new Error(error.message)
     }
 }
@@ -77,20 +96,41 @@ export const signIn = async ({email, password}: SignInParams) => {
 
 export const signOut = async () => {
     try {
+        console.log('signOut initializing...')
+
         const { error } = await supabase.auth.signOut()
-        if (error) throw error
+        if (error) {
+            console.log('signOut error: ', error)
+            throw error
+        } else {
+            console.log('signOut: Sign Out successful!')
+            return true
+        }
     } catch (error: any) {
+        console.log('signOut error: ', error)
         throw new Error(error.message)
     }
 }
 
 export const getCurrentUser = async (): Promise<User | null> => {
     try {
+        console.log('getCurrentUser: Checking for session...')
+        
         // Get current auth user
         const { data: { user: authUser }, error: authError } = await supabase.auth.getUser()
 
-        if (authError) throw authError
-        if (!authUser) return null
+        if (authError) {
+            console.log('getCurrentUser: Auth error:', authError)
+            throw authError
+        }
+        
+        if (!authUser) {
+            console.log('getCurrentUser: No auth user found (not signed in)')
+            return null
+        }
+
+        console.log('getCurrentUser: Auth user found:', authUser.id)
+        console.log('getCurrentUser: Fetching profile from database...')
 
         // Get user profile from database
         const { data: userData, error: userError } = await supabase
@@ -99,8 +139,17 @@ export const getCurrentUser = async (): Promise<User | null> => {
             .eq('id', authUser.id)
             .single()
 
-        if (userError) throw userError
+        if (userError) {
+            console.log('getCurrentUser: Profile fetch error:', userError)
+            
+            // If profile doesn't exist, sign out (orphaned auth user)
+            console.log('getCurrentUser: Profile not found, signing out orphaned session...')
+            await supabase.auth.signOut()
+            
+            throw userError
+        }
 
+        console.log('getCurrentUser: Profile found successfully!')
         return userData as User
     } catch (error) {
         console.log('getCurrentUser error:', error)

@@ -44,3 +44,6 @@ app-example
 
 .env.local
 .env
+
+# Kiro IDE settings (contains secrets)
+.kiro/

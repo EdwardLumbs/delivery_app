@@ -38,7 +38,7 @@ const Search = () => {
                     const isFirstRightColItem = index % 2 === 0
 
                     return (
-                        <View className={cn('flex-1 max-w-[48%]', !isFirstRightColItem ? 'mt-10': 'mt-0')}>
+                        <View key={index} className={cn('flex-1 max-w-[48%]', !isFirstRightColItem ? 'mt-10': 'mt-0')}>
                             <MenuCard
                                 item={item as MenuItem}
                             />

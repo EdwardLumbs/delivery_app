@@ -1,11 +1,14 @@
 import CustomButton from '@/components/CustomButton';
 import CustomInput from '@/components/CustomInput';
 import { signIn } from '@/lib/supabase';
+import useAuthStore from '@/store/auth.store';
 import { Link, router } from 'expo-router';
 import React, { useState } from 'react';
 import { Alert, Text, View } from 'react-native';
 
 const SignIn = () => {
+    const { fetchAuthenticatedUser } = useAuthStore()
+    
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [form, setForm] = useState({ email: '', password: ''})
 
@@ -18,6 +21,8 @@ const SignIn = () => {
 
         try {
             await signIn({ email, password })
+
+            await fetchAuthenticatedUser()
 
             router.replace('/')
         } catch (error: any) {

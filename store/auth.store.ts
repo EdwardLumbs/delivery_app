@@ -12,6 +12,7 @@ type AuthState = {
     setLoading: (loading: boolean) => void
 
     fetchAuthenticatedUser: () => Promise<void>
+    clearAuth: () => void
 }
 
 const useAuthStore = create<AuthState>((set) => ({
@@ -37,6 +38,15 @@ const useAuthStore = create<AuthState>((set) => ({
         } finally {
             set({isLoading: false})
         }
+    },
+
+    clearAuth: () => {
+        console.log('clearAuth: Clearing auth state...')
+        set({ 
+            isAuthenticated: false, 
+            user: null,
+            isLoading: false
+        })
     }
 }))
 
