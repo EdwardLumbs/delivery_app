@@ -7,14 +7,13 @@ import { useSupabase } from '@/lib/useSupabase'
 import { MenuItem } from '@/type'
 import cn from 'clsx'
 import { useLocalSearchParams } from 'expo-router'
-import { useEffect } from 'react'
 import { FlatList, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 const Search = () => {
     const {category, query} = useLocalSearchParams<{query: string; category: string}>()
 
-    const { data, refetch, loading } = useSupabase({
+    const { data, loading } = useSupabase({
         fn: getMenu,
         params: {
             category,
@@ -25,10 +24,6 @@ const Search = () => {
     const { data: categories } = useSupabase({
         fn: getCategories
     })
-
-    useEffect(() => {
-        refetch({category, query, limit: 6})
-    }, [category, query, refetch])
 
     return (
         <SafeAreaView className='bg-white h-full'>
@@ -66,7 +61,11 @@ const Search = () => {
                         <Filter categories={categories!}/>
                     </View>
                 )}
-                ListEmptyComponent={() => !loading && <Text>No results</Text>}
+                ListEmptyComponent={() => !loading && (
+                    <View>
+                        <Text>No results</Text>
+                    </View>
+                )}
             />
         </SafeAreaView>
     )

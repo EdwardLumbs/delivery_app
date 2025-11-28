@@ -12,7 +12,7 @@ export async function getMenu(params?: GetMenuParams): Promise<MenuItem[]> {
         .from('menu')
         .select(`
             *,
-            category:categories(id, name, description)
+            category:categories!inner(id, name, description)
         `)
 
     // Filter by category if provided
