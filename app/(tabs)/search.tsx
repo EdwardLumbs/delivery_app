@@ -75,7 +75,7 @@ const Search = () => {
 
                         <SearchBar/>
 
-                        <Filter categories={categories!}/>
+                        <Filter categories={categories}/>
                     </View>
                 )}
                 ListEmptyComponent={() => !isLoading && (

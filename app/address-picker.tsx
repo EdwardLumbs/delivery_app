@@ -1,12 +1,14 @@
 import CustomButton from '@/components/CustomButton'
+import OutsideDeliveryZoneModal from '@/components/OutsideDeliveryZoneModal'
 import { images } from '@/constants'
+import { getDeliveryZonePolygon, isWithinDeliveryZone } from '@/lib/geospatial'
 import { supabase } from '@/lib/supabase'
 import useAuthStore from '@/store/auth.store'
 import * as Location from 'expo-location'
 import { router, useLocalSearchParams } from 'expo-router'
 import React, { useEffect, useRef, useState } from 'react'
 import { ActivityIndicator, Alert, Image, Text, TouchableOpacity, View } from 'react-native'
-import MapView, { Region } from 'react-native-maps'
+import MapView, { Polygon, Region } from 'react-native-maps'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 const AddressPicker = () => {
@@ -25,10 +27,13 @@ const AddressPicker = () => {
         latitudeDelta: 0.01,
         longitudeDelta: 0.01,
     })
+    const [deliveryZone, setDeliveryZone] = useState<{latitude: number, longitude: number}[] | null>(null)
+    const [showOutsideZoneModal, setShowOutsideZoneModal] = useState(false)
     const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
     useEffect(() => {
         getCurrentLocation()
+        loadDeliveryZone()
         
         // Cleanup timer on unmount
         return () => {
@@ -38,6 +43,13 @@ const AddressPicker = () => {
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
+
+    const loadDeliveryZone = async () => {
+        const polygon = await getDeliveryZonePolygon()
+        if (polygon) {
+            setDeliveryZone(polygon)
+        }
+    }
 
     const getCurrentLocation = async () => {
         try {
@@ -162,7 +174,7 @@ const AddressPicker = () => {
         }
     }
 
-    const handleConfirm = () => {
+    const handleConfirm = async () => {
         console.log('=== HANDLE CONFIRM ===')
         console.log('returnTo:', returnTo)
         console.log('isRequired:', isRequired)
@@ -170,6 +182,16 @@ const AddressPicker = () => {
         
         if (!address) {
             Alert.alert('Error', 'Please select a location on the map')
+            return
+        }
+
+        // Check if location is within delivery zone
+        setIsSaving(true)
+        const isInZone = await isWithinDeliveryZone(region.longitude, region.latitude)
+        setIsSaving(false)
+
+        if (!isInZone) {
+            setShowOutsideZoneModal(true)
             return
         }
 
@@ -234,7 +256,16 @@ const AddressPicker = () => {
                     onRegionChange={handleRegionChange}
                     showsUserLocation={true}
                     showsMyLocationButton={false}
-                />
+                >
+                    {deliveryZone && (
+                        <Polygon
+                            coordinates={deliveryZone}
+                            fillColor="rgba(254, 140, 0, 0.15)"
+                            strokeColor="#FE8C00"
+                            strokeWidth={2}
+                        />
+                    )}
+                </MapView>
 
                 {/* Fixed center pin that stays in middle of screen */}
                 <View className='absolute top-0 left-0 right-0 bottom-0 items-center justify-center pointer-events-none'>
@@ -280,7 +311,10 @@ const AddressPicker = () => {
                 />
             </View>
 
-
+            <OutsideDeliveryZoneModal 
+                visible={showOutsideZoneModal}
+                onTryAgain={() => setShowOutsideZoneModal(false)}
+            />
         </SafeAreaView>
     )
 }
