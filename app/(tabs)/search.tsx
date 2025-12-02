@@ -3,33 +3,48 @@ import Filter from '@/components/Filter'
 import MenuCard from '@/components/MenuCard'
 import SearchBar from '@/components/SearchBar'
 import { images } from '@/constants'
-import { getCategories, getMenu } from '@/lib/queries'
-import { useSupabase } from '@/lib/useSupabase'
+import useMenuStore from '@/store/menu.store'
 import { MenuItem } from '@/type'
 import cn from 'clsx'
 import { router, useLocalSearchParams } from 'expo-router'
+import { useEffect } from 'react'
 import { FlatList, Image, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 const Search = () => {
     const {category, query} = useLocalSearchParams<{query: string; category: string}>()
+    const { menuItems, categories, isLoading, fetchMenu, fetchCategories, shouldRefetch } = useMenuStore()
 
-    const { data, loading } = useSupabase({
-        fn: getMenu,
-        params: {
-            category,
-            query,
-            limit: 6
+    // Fetch data on mount or when cache is stale
+    useEffect(() => {
+        console.log('Search page mounted, checking cache...')
+        
+        // Check if we should refetch based on TTL
+        if (shouldRefetch()) {
+            console.log('Cache is stale or empty, fetching from database')
+            fetchMenu({ category: category || '', query: query || '', limit: 6 })
+        } else {
+            console.log('Using cached menu data')
         }
-    })
-    const { data: categories } = useSupabase({
-        fn: getCategories
-    })
+        
+        // Fetch categories if not cached (they rarely change)
+        if (categories.length === 0) {
+            fetchCategories()
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [category, query])
+
+    // Filter menu items based on current category and query
+    const filteredMenuItems = menuItems.filter(item => {
+        const matchesCategory = !category || category === 'All' || item.category_id === category
+        const matchesQuery = !query || item.name.toLowerCase().includes(query.toLowerCase())
+        return matchesCategory && matchesQuery
+    }).slice(0, 6)
 
     return (
         <SafeAreaView className='bg-white h-full'>
             <FlatList
-                data={data}
+                data={filteredMenuItems}
                 renderItem={({item, index}) => {
                     const isFirstRightColItem = index % 2 === 0
 
@@ -63,7 +78,7 @@ const Search = () => {
                         <Filter categories={categories!}/>
                     </View>
                 )}
-                ListEmptyComponent={() => !loading && (
+                ListEmptyComponent={() => !isLoading && (
                     <View className='items-center'>
                         <Image 
                             className='w-48 h-48'
