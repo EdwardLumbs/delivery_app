@@ -20,13 +20,21 @@ export interface Category extends BaseRecord {
     description: string;
 }
 
+// GeoJSON Point format (standard)
+export interface GeoJSONPoint {
+    type: 'Point';
+    coordinates: [number, number]; // [longitude, latitude]
+}
+
 export interface User extends BaseRecord {
     name: string;
     email: string;
     avatar: string;
     phone_number: string;
     address_1: string;
-    address_2: string
+    address_2: string;
+    address_1_coords: GeoJSONPoint | string | null; // GeoJSON or WKB string from database
+    address_2_coords: GeoJSONPoint | string | null; // GeoJSON or WKB string from database
 }
 
 export interface Customization extends BaseRecord {
@@ -89,6 +97,7 @@ interface CustomButtonProps {
     leftIcon?: React.ReactNode;
     textStyle?: string;
     isLoading?: boolean;
+    disabled?: boolean;
 }
 
 interface CustomHeaderProps {

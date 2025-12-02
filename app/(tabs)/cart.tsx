@@ -1,10 +1,12 @@
 import CartItem from '@/components/CartItem'
 import CustomButton from '@/components/CustomButton'
 import CustomHeader from '@/components/CustomHeader'
+import { images } from '@/constants'
 import { useCartStore } from '@/store/cart.store'
 import { PaymentInfoStripeProps } from '@/type'
 import cn from 'clsx'
-import { FlatList, Text, View } from 'react-native'
+import { router } from 'expo-router'
+import { FlatList, Image, Text, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 const PaymentInfoStripe = ({ label,  value,  labelStyle,  valueStyle, }: PaymentInfoStripeProps) => (
@@ -42,7 +44,25 @@ const Cart = () => {
                 keyExtractor={(item) => item.id}
                 contentContainerClassName='pb-28 px-5 pt-5'
                 ListHeaderComponent={() => <CustomHeader title="Your Cart" />}
-                ListEmptyComponent={() => <Text>Cart Empty</Text>}
+                ListEmptyComponent={() => (
+                    <View className='items-center'>
+                        <Image 
+                            className='w-48 h-48'
+                            source={images.emptyState}
+                            resizeMode='contain'
+                        />
+                        <Text className='h3-bold text-dark-100'>Your cart is empty</Text>
+                        <TouchableOpacity 
+                            onPress={() => router.push('/(tabs)/search')}
+                            className='mt-5 p-3 bg-primary/10 rounded-full items-center'
+                            activeOpacity={0.7}
+                        >
+                            <Text className='paragraph-semibold text-primary'>
+                                Ready to dig in?
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
+                )}
                 ListFooterComponent={() => totalItems > 0 && (
                     <View className='gap-5'>
                         <View className='mt-6 border border-gray-200 p-5 rounded-2xl'>
@@ -72,7 +92,7 @@ const Cart = () => {
                             <CustomButton 
                                 title={allExcluded ? 'No Items Selected' : 'Order Now'}
                                 onPress={() => {}}
-                                style={allExcluded ? 'opacity-50' : ''}
+                                style={allExcluded ? 'opacity-50 mt-5' : 'mt-5'}
                             />
                         </View>
                     </View>

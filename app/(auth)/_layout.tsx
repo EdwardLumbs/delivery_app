@@ -10,14 +10,25 @@ export default function AuthLayout() {
     if (isAuthenticated) return <Redirect href="/" />
 
     return (
-        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : "height"}>
-            <ScrollView className="bg-white h-full" keyboardShouldPersistTaps="handled">
-                <View className="w-full relative" style={{height: Dimensions.get('screen').height / 2.25}}>
-                    <ImageBackground source={images.loginGraphic} className="size-full rounded-b-lg" resizeMode="stretch" />
-                    <Image source={images.logo} className="self-center size-48 absolute -bottom-16 z-10" />
+        <View className="relative h-screen">
+            <ImageBackground source={images.loginGraphic} className="size-full" resizeMode="cover" />
+            <KeyboardAvoidingView 
+                behavior={Platform.OS === 'ios' ? 'position' : undefined}
+                className="absolute bottom-0 left-0 right-0 z-20"
+                style={{height: Dimensions.get('screen').height * 0.64}}
+                keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
+            >
+                <View className="absolute -top-24 z-30 left-0 right-0 items-center">
+                    <Image source={images.logo} className="size-48" resizeMode="contain" />
                 </View>
-                <Slot />
-            </ScrollView>
-        </KeyboardAvoidingView>
+                <ScrollView 
+                    className="bg-white rounded-t-3xl flex-1" 
+                    keyboardShouldPersistTaps="handled"
+                    contentContainerClassName="pt-9"
+                >
+                    <Slot />
+                </ScrollView>
+            </KeyboardAvoidingView>
+        </View>
     )
 }

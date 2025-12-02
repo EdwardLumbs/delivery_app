@@ -2,11 +2,12 @@ import { useCartStore } from '@/store/cart.store'
 import { MenuItem } from '@/type'
 import { Image, Platform, Text, TouchableOpacity } from 'react-native'
 
-const MenuCard = ({item: { id, image_url, name, price }}: { item: MenuItem }) => {
+const MenuCard = ({item: { id, image_url, name, price }, onPress}: { item: MenuItem, onPress?: () => void }) => {
     const { addItem } = useCartStore()
 
     return (
-        <TouchableOpacity 
+        <TouchableOpacity
+            onPress={onPress} 
             className='menu-card' 
             style={Platform.OS === 'android' ? 
                 { elevation: 10, shadowColor: '#878787' } : 

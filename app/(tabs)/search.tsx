@@ -2,12 +2,13 @@ import CartButton from '@/components/CartButton'
 import Filter from '@/components/Filter'
 import MenuCard from '@/components/MenuCard'
 import SearchBar from '@/components/SearchBar'
+import { images } from '@/constants'
 import { getCategories, getMenu } from '@/lib/queries'
 import { useSupabase } from '@/lib/useSupabase'
 import { MenuItem } from '@/type'
 import cn from 'clsx'
-import { useLocalSearchParams } from 'expo-router'
-import { FlatList, Text, View } from 'react-native'
+import { router, useLocalSearchParams } from 'expo-router'
+import { FlatList, Image, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 const Search = () => {
@@ -36,6 +37,7 @@ const Search = () => {
                         <View className={cn('flex-1 max-w-[48%]', !isFirstRightColItem ? 'mt-10': 'mt-0')}>
                             <MenuCard
                                 item={item as MenuItem}
+                                onPress={() => router.push(`/menu/${item.id}` as any)}
                             />
                         </View>
                     )
@@ -62,8 +64,14 @@ const Search = () => {
                     </View>
                 )}
                 ListEmptyComponent={() => !loading && (
-                    <View>
-                        <Text>No results</Text>
+                    <View className='items-center'>
+                        <Image 
+                            className='w-48 h-48'
+                            source={images.emptyState}
+                            resizeMode='contain'
+                        />
+                        <Text className='h3-bold text-dark-100'>Nothing matched your search</Text>
+                        <Text className='paragraph-medium text-gray-200 mt-5'>Try a different search term or check for typos</Text>
                     </View>
                 )}
             />

@@ -66,7 +66,7 @@ const SignUp = () => {
                 onPress={submit}
             />
 
-            <View className='flex justify-center mt-5 flex-row gap-2'>
+            <View className='flex justify-center flex-row gap-2'>
                 <Text className='base-regular text-gray-100'>
                     Already have an account?
                 </Text>
