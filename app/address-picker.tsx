@@ -32,8 +32,7 @@ const AddressPicker = () => {
     const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
     useEffect(() => {
-        getCurrentLocation()
-        loadDeliveryZone()
+        initializeMap()
         
         // Cleanup timer on unmount
         return () => {
@@ -44,22 +43,27 @@ const AddressPicker = () => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
-    const loadDeliveryZone = async () => {
+    const initializeMap = async () => {
+        setIsLoading(true)
+        
+        // Load delivery zone polygon
         const polygon = await getDeliveryZonePolygon()
         if (polygon) {
             setDeliveryZone(polygon)
         }
+        
+        // Start at Kawit location and get address
+        await reverseGeocode(region.latitude, region.longitude)
+        
+        setIsLoading(false)
     }
 
     const getCurrentLocation = async () => {
         try {
-            setIsLoading(true)
-            
             const { status } = await Location.requestForegroundPermissionsAsync()
             
             if (status !== 'granted') {
                 Alert.alert('Permission Denied', 'Please enable location permissions to use this feature.')
-                setIsLoading(false)
                 return
             }
 
@@ -80,8 +84,6 @@ const AddressPicker = () => {
         } catch (error) {
             console.log('getCurrentLocation error:', error)
             Alert.alert('Error', 'Failed to get current location')
-        } finally {
-            setIsLoading(false)
         }
     }
 

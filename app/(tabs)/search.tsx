@@ -36,7 +36,9 @@ const Search = () => {
 
     // Filter menu items based on current category and query
     const filteredMenuItems = menuItems.filter(item => {
-        const matchesCategory = !category || category === 'All' || item.category_id === category
+        // Find the category object to get its ID
+        const selectedCategory = categories.find(cat => cat.name === category)
+        const matchesCategory = !category || category === 'All' || item.category_id === selectedCategory?.id
         const matchesQuery = !query || item.name.toLowerCase().includes(query.toLowerCase())
         return matchesCategory && matchesQuery
     }).slice(0, 6)
