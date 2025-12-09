@@ -68,3 +68,87 @@ export async function getMenuById(id: string): Promise<MenuItem | null> {
 
     return data as MenuItem
 }
+
+// Order queries
+export interface Order {
+    id: string
+    user_id: string
+    order_number?: string
+    status: string
+    total_price: number
+    delivery_fee: number
+    delivery_address: any
+    created_at: string
+    updated_at: string
+}
+
+export async function getUserOrders(userId: string, limit: number = 20): Promise<Order[]> {
+    const { data, error } = await supabase
+        .from('orders')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(limit)
+
+    if (error) throw error
+
+    return data as Order[]
+}
+
+// User profile queries
+export interface UpdateUserProfileParams {
+    userId: string
+    name?: string
+    phone_number?: string
+    avatar?: string
+}
+
+export async function updateUserProfile(params: UpdateUserProfileParams): Promise<void> {
+    const { userId, ...updates } = params
+    
+    const { error } = await supabase
+        .from('users')
+        .update(updates)
+        .eq('id', userId)
+
+    if (error) throw error
+}
+
+export interface UpdateUserAddressParams {
+    userId: string
+    address_1?: string
+    address_1_coords?: string
+    address_2?: string
+    address_2_coords?: string
+}
+
+export async function updateUserAddress(params: UpdateUserAddressParams): Promise<void> {
+    const { userId, ...updates } = params
+    
+    const { error } = await supabase
+        .from('users')
+        .update(updates)
+        .eq('id', userId)
+
+    if (error) throw error
+}
+
+// Avatar storage functions
+export async function uploadAvatar(userId: string, blob: Blob, ext: string): Promise<string> {
+    const filePath = `${userId}.${ext}`
+    
+    const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, blob, {
+            contentType: `image/${ext}`,
+            upsert: true
+        })
+
+    if (uploadError) throw uploadError
+
+    const { data: { publicUrl } } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(filePath)
+
+    return publicUrl
+}

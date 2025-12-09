@@ -2,7 +2,7 @@ import CustomButton from '@/components/CustomButton'
 import CustomHeader from '@/components/CustomHeader'
 import CustomInput from '@/components/CustomInput'
 import { images } from '@/constants'
-import { supabase } from '@/lib/supabase'
+import { updateUserAddress, updateUserProfile, uploadAvatar } from '@/lib/queries'
 import useAuthStore from '@/store/auth.store'
 import * as ImagePicker from 'expo-image-picker'
 import { router, useLocalSearchParams } from 'expo-router'
@@ -150,28 +150,14 @@ const EditProfile = () => {
             setIsUploadingImage(true)
             
             // Get file extension
-            const ext = uri.split('.').pop()
-            const fileName = `${user?.id}-${Date.now()}.${ext}`
-            const filePath = `avatars/${fileName}`
+            const ext = uri.split('.').pop() || 'jpg'
 
             // Fetch the image as blob
             const response = await fetch(uri)
             const blob = await response.blob()
 
-            // Upload to Supabase Storage
-            const { error: uploadError } = await supabase.storage
-                .from('avatars')
-                .upload(filePath, blob, {
-                    contentType: `image/${ext}`,
-                    upsert: true
-                })
-
-            if (uploadError) throw uploadError
-
-            // Get public URL
-            const { data: { publicUrl } } = supabase.storage
-                .from('avatars')
-                .getPublicUrl(filePath)
+            // Upload to Supabase Storage and get public URL
+            const publicUrl = await uploadAvatar(user!.id, blob, ext)
 
             return publicUrl
         } catch (error) {
@@ -263,23 +249,20 @@ const EditProfile = () => {
             }
 
             // Update user in database
-            const { error } = await supabase
-                .from('users')
-                .update({
-                    name: formData.name.trim(),
-                    phone_number: phoneToStore,
-                    address_1: formData.address_1.trim() || null,
-                    address_2: formData.address_2.trim() || null,
-                    address_1_coords: address1WKT,
-                    address_2_coords: address2WKT,
-                    avatar: avatarUrl
-                })
-                .eq('id', user.id)
+            await updateUserProfile({
+                userId: user.id,
+                name: formData.name.trim(),
+                phone_number: phoneToStore || undefined,
+                avatar: avatarUrl || undefined
+            })
 
-            if (error) {
-                console.log('handleSave error:', error)
-                throw error
-            }
+            await updateUserAddress({
+                userId: user.id,
+                address_1: formData.address_1.trim() || undefined,
+                address_2: formData.address_2.trim() || undefined,
+                address_1_coords: address1WKT || undefined,
+                address_2_coords: address2WKT || undefined
+            })
 
             console.log('handleSave: Profile updated successfully!')
             
@@ -340,21 +323,13 @@ const EditProfile = () => {
 
             console.log('Updating database...')
             // Update only address in database
-            const { data, error } = await supabase
-                .from('users')
-                .update({
-                    address_1: saveData.address_1.trim(),
-                    address_1_coords: address1WKT
-                })
-                .eq('id', user.id)
-                .select()
+            await updateUserAddress({
+                userId: user.id,
+                address_1: saveData.address_1.trim(),
+                address_1_coords: address1WKT
+            })
 
-            if (error) {
-                console.log('DATABASE ERROR:', error)
-                throw error
-            }
-
-            console.log('Database update result:', data)
+            console.log('Database update successful')
             console.log('Refreshing user data...')
             
             // Refresh user data in store

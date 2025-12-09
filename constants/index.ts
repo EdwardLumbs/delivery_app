@@ -9,6 +9,7 @@ import home from "@/assets/icons/home.png";
 import location from "@/assets/icons/location.png";
 import logout from "@/assets/icons/logout.png";
 import minus from "@/assets/icons/minus.png";
+import order from "@/assets/icons/order.png";
 import pencil from "@/assets/icons/pencil.png";
 import person from "@/assets/icons/person.png";
 import phone from "@/assets/icons/phone.png";
@@ -191,6 +192,7 @@ export const images = {
     location,
     logout,
     minus,
+    order,
     pencil,
     person,
     phone,

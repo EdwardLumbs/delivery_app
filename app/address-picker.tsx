@@ -2,7 +2,7 @@ import CustomButton from '@/components/CustomButton'
 import OutsideDeliveryZoneModal from '@/components/OutsideDeliveryZoneModal'
 import { images } from '@/constants'
 import { getDeliveryZonePolygon, isWithinDeliveryZone } from '@/lib/geospatial'
-import { supabase } from '@/lib/supabase'
+import { updateUserAddress } from '@/lib/queries'
 import useAuthStore from '@/store/auth.store'
 import * as Location from 'expo-location'
 import { router, useLocalSearchParams } from 'expo-router'
@@ -142,18 +142,11 @@ const AddressPicker = () => {
             console.log('WKT:', wkt)
 
             // Save to database
-            const { error } = await supabase
-                .from('users')
-                .update({
-                    address_1: addressText.trim(),
-                    address_1_coords: wkt
-                })
-                .eq('id', user.id)
-
-            if (error) {
-                console.log('Save error:', error)
-                throw error
-            }
+            await updateUserAddress({
+                userId: user.id,
+                address_1: addressText.trim(),
+                address_1_coords: wkt
+            })
 
             console.log('Location saved successfully!');
             
