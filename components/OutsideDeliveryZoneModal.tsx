@@ -5,9 +5,10 @@ import { BackHandler, Image, Modal, Text, View } from 'react-native'
 interface OutsideDeliveryZoneModalProps {
     visible: boolean
     onTryAgain: () => void
+    showExitButton?: boolean
 }
 
-const OutsideDeliveryZoneModal = ({ visible, onTryAgain }: OutsideDeliveryZoneModalProps) => {
+const OutsideDeliveryZoneModal = ({ visible, onTryAgain, showExitButton = true }: OutsideDeliveryZoneModalProps) => {
     const handleExit = () => {
         BackHandler.exitApp()
     }
@@ -47,12 +48,14 @@ const OutsideDeliveryZoneModal = ({ visible, onTryAgain }: OutsideDeliveryZoneMo
                             onPress={onTryAgain}
                             style='w-full'
                         />
-                        <CustomButton 
-                            title='Exit App'
-                            onPress={handleExit}
-                            style='w-full bg-gray-100'
-                            textStyle='text-dark-100'
-                        />
+                        {showExitButton && (
+                            <CustomButton 
+                                title='Exit App'
+                                onPress={handleExit}
+                                style='w-full bg-gray-100'
+                                textStyle='text-dark-100'
+                            />
+                        )}
                     </View>
                 </View>
             </View>

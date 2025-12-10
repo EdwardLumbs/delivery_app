@@ -67,6 +67,7 @@ export interface CartItemType {
 
 export interface CartStore {
     items: CartItemType[];
+    hasVisitedCheckout: boolean;
     addItem: (item: Omit<CartItemType, "quantity">) => void;
     removeItem: (id: string, customizations: CartCustomization[]) => void;
     increaseQty: (id: string, customizations: CartCustomization[]) => void;
@@ -75,6 +76,7 @@ export interface CartStore {
     clearCart: () => void;
     getTotalItems: () => number;
     getTotalPrice: () => number;
+    setHasVisitedCheckout: (visited: boolean) => void;
 }
 
 interface TabBarIconProps {

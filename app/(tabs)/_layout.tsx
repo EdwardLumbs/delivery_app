@@ -1,3 +1,5 @@
+import FloatingCheckoutButton from "@/components/FloatingCheckoutButton";
+
 import LocationSetupModal from "@/components/LocationSetupModal";
 import SuccessModal from "@/components/SuccessModal";
 import { images } from "@/constants";
@@ -123,6 +125,8 @@ export default function TabLayout() {
                     setShowSuccessModal(false)
                 }}
             />
+            
+            <FloatingCheckoutButton />
             
             <Tabs
                 screenOptions={{

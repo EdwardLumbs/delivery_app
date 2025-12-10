@@ -15,6 +15,7 @@ function areCustomizationsEqual(
 
 export const useCartStore = create<CartStore>((set, get) => ({
     items: [],
+    hasVisitedCheckout: false,
 
     addItem: (item) => {
         const customizations = item.customizations ?? [];
@@ -106,4 +107,6 @@ export const useCartStore = create<CartStore>((set, get) => ({
                 ) ?? 0;
             return total + item.quantity * (base + customPrice);
         }, 0),
+
+    setHasVisitedCheckout: (visited: boolean) => set({ hasVisitedCheckout: visited }),
 }));

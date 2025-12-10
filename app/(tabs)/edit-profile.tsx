@@ -18,6 +18,8 @@ const EditProfile = () => {
     const [selectedImage, setSelectedImage] = useState<string | null>(null)
 
 
+
+
     const [formData, setFormData] = useState({
         name: user?.name || '',
         phone_number: user?.phone_number || '',
@@ -122,21 +124,27 @@ const EditProfile = () => {
 
     const pickImage = async () => {
         try {
+            console.log('=== PICK IMAGE STARTED ===')
             const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync()
+            console.log('Media library permission status:', status)
             
             if (status !== 'granted') {
                 Alert.alert('Permission Required', 'Please allow access to your photo library.')
                 return
             }
 
+            console.log('Launching image library...')
             const result = await ImagePicker.launchImageLibraryAsync({
                 mediaTypes: ['images'],
                 allowsEditing: true,
                 aspect: [1, 1],
                 quality: 0.8,
             })
+            
+            console.log('Image picker result:', result)
 
             if (!result.canceled && result.assets[0]) {
+                console.log('Selected image URI:', result.assets[0].uri)
                 setSelectedImage(result.assets[0].uri)
             }
         } catch (error) {
@@ -370,7 +378,31 @@ const EditProfile = () => {
                     <TouchableOpacity onPress={pickImage} disabled={isUploadingImage}>
                         <Image 
                             className='profile-avatar'
-                            source={selectedImage ? { uri: selectedImage } : (user?.avatar ? { uri: user.avatar } : images.person)}
+                            source={(() => {
+                                console.log('=== IMAGE SOURCE LOGIC ===')
+                                console.log('selectedImage:', selectedImage)
+                                console.log('user?.avatar:', user?.avatar)
+                                
+                                if (selectedImage) {
+                                    console.log('Using selectedImage')
+                                    return { uri: selectedImage }
+                                } else if (user?.avatar && user.avatar !== '') {
+                                    console.log('Using user avatar:', user.avatar)
+                                    return { uri: user.avatar }
+                                } else {
+                                    console.log('Using default person image')
+                                    return images.person
+                                }
+                            })()}
+                            onError={(error) => {
+                                console.log('=== IMAGE LOAD ERROR ===')
+                                console.log('Error loading image:', error.nativeEvent.error)
+                                console.log('Source was:', user?.avatar)
+                            }}
+                            onLoad={() => {
+                                console.log('=== IMAGE LOADED SUCCESSFULLY ===')
+                                console.log('Loaded image from:', user?.avatar)
+                            }}
                         />
                         <View className='profile-edit'>
                             {isUploadingImage ? (

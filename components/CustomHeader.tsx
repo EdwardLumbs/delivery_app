@@ -1,4 +1,4 @@
-import { useRouter } from "expo-router";
+import { usePathname, useRouter } from "expo-router";
 import { Image, Text, TouchableOpacity, View } from "react-native";
 
 import { images } from "@/constants";
@@ -6,10 +6,20 @@ import { CustomHeaderProps } from "@/type";
 
 const CustomHeader = ({ title }: CustomHeaderProps) => {
     const router = useRouter();
+    const pathname = usePathname();
+
+    const handleBack = () => {
+        // Special handling for checkout page
+        if (pathname === '/checkout') {
+            router.push('/(tabs)/cart');
+        } else {
+            router.back();
+        }
+    };
 
     return (
         <View className="custom-header">
-            <TouchableOpacity onPress={() => router.back()}>
+            <TouchableOpacity onPress={handleBack}>
                 <Image
                     source={images.arrowBack}
                     className="size-5"

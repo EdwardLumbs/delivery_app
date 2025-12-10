@@ -57,7 +57,7 @@ export const createUser = async ({email, password, name}: CreateUserParams) => {
                 id: authData.user.id,
                 email,
                 name,
-                avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`
+                avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random&format=png&size=128`
             })
             .select()
             .single()

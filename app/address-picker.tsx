@@ -2,6 +2,7 @@ import CustomButton from '@/components/CustomButton'
 import OutsideDeliveryZoneModal from '@/components/OutsideDeliveryZoneModal'
 import { images } from '@/constants'
 import { getDeliveryZonePolygon, isWithinDeliveryZone } from '@/lib/geospatial'
+import { parseCoordinates } from '@/lib/helpers'
 import { updateUserAddress } from '@/lib/queries'
 import useAuthStore from '@/store/auth.store'
 import * as Location from 'expo-location'
@@ -52,8 +53,39 @@ const AddressPicker = () => {
             setDeliveryZone(polygon)
         }
         
-        // Start at Kawit location and get address
-        await reverseGeocode(region.latitude, region.longitude)
+        // Check if user has saved coordinates for this address field
+        let initialLat = 14.4444  // Default Kawit
+        let initialLng = 120.9025
+        
+        if (user) {
+            let coordsToUse = null
+            
+            if (addressField === 'address_1' && user.address_1_coords) {
+                coordsToUse = user.address_1_coords
+            } else if (addressField === 'address_2' && user.address_2_coords) {
+                coordsToUse = user.address_2_coords
+            }
+            
+            // Parse coordinates (handles both GeoJSON and WKB formats)
+            if (coordsToUse) {
+                const parsedCoords = parseCoordinates(coordsToUse)
+                if (parsedCoords) {
+                    initialLng = parsedCoords[0]  // longitude
+                    initialLat = parsedCoords[1]  // latitude
+                }
+            }
+        }
+        
+        // Set region to saved address or default
+        setRegion({
+            latitude: initialLat,
+            longitude: initialLng,
+            latitudeDelta: 0.01,
+            longitudeDelta: 0.01,
+        })
+        
+        // Get address for the initial location
+        await reverseGeocode(initialLat, initialLng)
         
         setIsLoading(false)
     }
@@ -122,6 +154,45 @@ const AddressPicker = () => {
         debounceTimer.current = setTimeout(() => {
             reverseGeocode(newRegion.latitude, newRegion.longitude)
         }, 800)
+    }
+
+    const saveLocationDirectlyQuiet = async (addressText: string, geoJson: any) => {
+        try {
+            setIsSaving(true)
+            console.log('=== SAVING LOCATION DIRECTLY (QUIET) ===')
+            console.log('Address:', addressText)
+            console.log('GeoJSON:', geoJson)
+
+            if (!user?.id) {
+                Alert.alert('Error', 'User not found')
+                return
+            }
+
+            // Convert GeoJSON to WKT format for database
+            const wkt = `POINT(${geoJson.coordinates[0]} ${geoJson.coordinates[1]})`
+            console.log('WKT:', wkt)
+
+            // Update user address in database
+            await updateUserAddress({
+                userId: user.id,
+                address_1: addressText.trim(),
+                address_1_coords: wkt
+            })
+
+            console.log('Address updated successfully')
+            
+            // Refresh user data FIRST so the store has the new address
+            await fetchAuthenticatedUser();
+            console.log('User data refreshed');
+            
+            // NO success modal for quiet save
+            
+        } catch (error) {
+            console.error('saveLocationDirectlyQuiet error:', error)
+            Alert.alert('Error', 'Failed to save location')
+        } finally {
+            setIsSaving(false)
+        }
     }
 
     const saveLocationDirectly = async (addressText: string, geoJson: any) => {
@@ -197,8 +268,24 @@ const AddressPicker = () => {
         }
 
         // Navigate back with the selected address and GeoJSON coordinates
-        if (returnTo === '/edit-profile') {
-            console.log('→ Going to edit-profile')
+        if (returnTo === '/checkout') {
+            console.log('→ Saving directly and returning to checkout')
+            // Coming from checkout - save directly to database and go back (no success modal)
+            await saveLocationDirectlyQuiet(address, geoJsonPoint)
+            router.replace('/checkout')
+        } else if (returnTo === '/edit-profile' && !isRequired) {
+            console.log('→ Going back to edit-profile with preview (not saving yet)')
+            // Coming from edit profile - return with preview data, don't save yet
+            router.push({
+                pathname: '/(tabs)/edit-profile',
+                params: { 
+                    selectedAddress: address,
+                    geoJson: JSON.stringify(geoJsonPoint),
+                    addressField: addressField
+                }
+            })
+        } else if (returnTo === '/edit-profile' && isRequired) {
+            console.log('→ Going to edit-profile (initial setup)')
             router.push({
                 pathname: '/(tabs)/edit-profile',
                 params: { 
@@ -309,6 +396,7 @@ const AddressPicker = () => {
             <OutsideDeliveryZoneModal 
                 visible={showOutsideZoneModal}
                 onTryAgain={() => setShowOutsideZoneModal(false)}
+                showExitButton={isRequired}
             />
         </SafeAreaView>
     )

@@ -48,6 +48,15 @@ const Profile = () => {
                         <Image 
                             className='profile-avatar'
                             source={user?.avatar ? { uri: user.avatar } : images.person}
+                            onError={(error) => {
+                                console.log('=== PROFILE PAGE IMAGE ERROR ===')
+                                console.log('Error loading avatar:', error.nativeEvent.error)
+                                console.log('Avatar URL was:', user?.avatar)
+                            }}
+                            onLoad={() => {
+                                console.log('=== PROFILE PAGE IMAGE LOADED ===')
+                                console.log('Successfully loaded avatar from:', user?.avatar)
+                            }}
                         />
                         <View className='profile-edit'>
                             <Image 
