@@ -27,7 +27,7 @@ const Cart = () => {
                 data={items}
                 renderItem={({item}) => <CartItem item={item} />}
                 keyExtractor={(item) => item.id}
-                contentContainerClassName='pb-28 px-5 pt-5'
+                contentContainerClassName='pb-64 px-5 pt-5'
                 ListHeaderComponent={() => <CustomHeader title="Your Cart" />}
                 ListEmptyComponent={() => (
                     <View className='items-center'>

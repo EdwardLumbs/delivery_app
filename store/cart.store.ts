@@ -78,7 +78,7 @@ export const useCartStore = create<CartStore>((set, get) => ({
         });
     },
 
-    clearCart: () => set({ items: [] }),
+    clearCart: () => set({ items: [], hasVisitedCheckout: false }),
 
     getTotalItems: () =>
         get().items.reduce((total, item) => total + item.quantity, 0),
@@ -109,4 +109,7 @@ export const useCartStore = create<CartStore>((set, get) => ({
         }, 0),
 
     setHasVisitedCheckout: (visited: boolean) => set({ hasVisitedCheckout: visited }),
+    
+    // Debug function to reset checkout flag
+    resetCheckoutFlag: () => set({ hasVisitedCheckout: false }),
 }));

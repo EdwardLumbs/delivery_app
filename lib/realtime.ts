@@ -17,6 +17,15 @@ export function subscribeToOrderUpdates(
     const channel: RealtimeChannel = supabase
         .channel('order-updates')
         .on('postgres_changes', {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'orders',
+            filter: `user_id=eq.${userId}`
+        }, (payload) => {
+            console.log('Order inserted:', payload.new)
+            onUpdate(payload.new as Order)
+        })
+        .on('postgres_changes', {
             event: 'UPDATE',
             schema: 'public',
             table: 'orders',

@@ -20,8 +20,10 @@ const FloatingActiveOrderButton = () => {
         staleTime: 30 * 1000,
     })
 
-    // Get the first active order (most recent)
-    const activeOrder = activeOrders[0]
+    // Check if we have active orders
+    const hasActiveOrders = activeOrders.length > 0
+    const activeOrder = activeOrders[0] // Most recent order for display
+    const hasMultipleOrders = activeOrders.length > 1
     
     // Check if checkout button should be visible
     const activeItems = items.filter(item => !item.isExcluded)
@@ -32,9 +34,9 @@ const FloatingActiveOrderButton = () => {
     
     // Don't show if:
     // - No active orders
-    // - Currently on orders, order detail, edit-profile, or profile pages
-    if (!activeOrder || currentRoute.includes('orders') || currentRoute.includes('order/') || 
-        currentRoute.includes('edit-profile') || currentRoute.includes('profile')) return null
+    // - Currently on orders, order detail, menu, edit-profile, or profile pages
+    if (!hasActiveOrders || currentRoute.includes('orders') || currentRoute.includes('order/') || 
+        currentRoute.includes('menu') || currentRoute.includes('edit-profile') || currentRoute.includes('profile')) return null
 
     const getStatusText = (status: string) => {
         switch (status) {
@@ -48,10 +50,20 @@ const FloatingActiveOrderButton = () => {
     // Position based on whether checkout button is visible
     const bottomPosition = shouldShowCheckoutButton ? 'bottom-56' : 'bottom-36'
 
+    const handlePress = () => {
+        if (hasMultipleOrders) {
+            // Multiple orders: go to orders page to see all
+            router.push('/(tabs)/orders')
+        } else {
+            // Single order: go directly to order detail
+            router.push(`/order/${activeOrder.id}` as any)
+        }
+    }
+
     return (
         <View className={`absolute ${bottomPosition} left-5 right-5 z-50`}>
             <TouchableOpacity
-                onPress={() => router.push(`/order/${activeOrder.id}` as any)}
+                onPress={handlePress}
                 className='bg-purple-600 rounded-2xl p-4 flex-row justify-between items-center shadow-lg'
                 activeOpacity={0.8}
             >
@@ -63,10 +75,13 @@ const FloatingActiveOrderButton = () => {
                     />
                     <View className='flex-1'>
                         <Text className='body-bold text-white'>
-                            Active Order
+                            {hasMultipleOrders ? `${activeOrders.length} Active Orders` : 'Active Order'}
                         </Text>
                         <Text className='small-regular text-white/80'>
-                            {getStatusText(activeOrder.status)} • Tap to track
+                            {hasMultipleOrders 
+                                ? 'Tap to view all orders' 
+                                : `${getStatusText(activeOrder.status)} • Tap to track`
+                            }
                         </Text>
                     </View>
                 </View>

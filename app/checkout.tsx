@@ -1,7 +1,7 @@
 import CheckoutItem from '@/components/cards/CheckoutItem'
 import CustomHeader from '@/components/misc/CustomHeader'
-import PaymentSummary from '@/components/ui/PaymentSummary'
 import SuccessModal from '@/components/modals/SuccessModal'
+import PaymentSummary from '@/components/ui/PaymentSummary'
 import { parseCoordinates } from '@/lib/helpers'
 import { createOrder } from '@/lib/queries'
 import useAuthStore from '@/store/auth.store'
@@ -85,7 +85,7 @@ const Checkout = () => {
                 data={checkoutItems}
                 renderItem={({ item }) => <CheckoutItem item={item} />}
                 keyExtractor={(item) => item.id}
-                contentContainerClassName='pb-28 px-5 pt-5'
+                contentContainerClassName='pb-64 px-5 pt-5'
                 ListHeaderComponent={() => (
                     <View>
                         <CustomHeader title="Checkout" />

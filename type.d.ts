@@ -77,6 +77,7 @@ export interface CartStore {
     getTotalItems: () => number;
     getTotalPrice: () => number;
     setHasVisitedCheckout: (visited: boolean) => void;
+    resetCheckoutFlag: () => void;
 }
 
 interface TabBarIconProps {

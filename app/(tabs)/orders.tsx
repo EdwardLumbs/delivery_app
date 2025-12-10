@@ -1,5 +1,5 @@
-import CustomHeader from '@/components/misc/CustomHeader'
 import OrderCard from '@/components/cards/OrderCard'
+import CustomHeader from '@/components/misc/CustomHeader'
 import { images } from '@/constants'
 import { getActiveOrders, getPreviousOrders, Order } from '@/lib/queries'
 import { queryClient } from '@/lib/queryClient'
@@ -113,7 +113,7 @@ const Orders = () => {
                 )}
                 renderSectionHeader={({ section: { title } }) => renderSectionHeader(title)}
                 keyExtractor={(item) => item.id}
-                contentContainerClassName='pb-28 px-5 pt-5'
+                contentContainerClassName='pb-64 px-5 pt-5'
                 ListHeaderComponent={() => <CustomHeader title="Your Orders" />}
                 ListEmptyComponent={() => (
                     <View className='items-center justify-center' style={{ minHeight: 400 }}>

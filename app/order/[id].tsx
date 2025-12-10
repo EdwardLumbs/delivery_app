@@ -68,7 +68,7 @@ const OrderDetail = () => {
 
     return (
         <SafeAreaView className='bg-white h-full'>
-            <ScrollView contentContainerClassName='pb-28'>
+            <ScrollView contentContainerClassName='pb-64'>
                 <View className='p-5'>
                     <CustomHeader title="Order Details" />
                 </View>

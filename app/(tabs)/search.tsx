@@ -1,6 +1,6 @@
+import MenuCard from '@/components/cards/MenuCard'
 import CartButton from '@/components/misc/CartButton'
 import Filter from '@/components/ui/Filter'
-import MenuCard from '@/components/cards/MenuCard'
 import SearchBar from '@/components/ui/SearchBar'
 import { images } from '@/constants'
 import { getCategories, getMenu } from '@/lib/queries'
@@ -62,7 +62,7 @@ const Search = () => {
                 keyExtractor={(item, index) => `${item.id}-${index}`}
                 numColumns={2}
                 columnWrapperClassName='gap-7'
-                contentContainerClassName='gap-7 px-5 pb-32'
+                contentContainerClassName='gap-7 px-5 pb-64'
                 ListHeaderComponent={() => (
                     <View className='my-5 gap-5'>
                         <View className='flex-between flex-row w-full'>

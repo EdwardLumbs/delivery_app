@@ -1,13 +1,15 @@
 import CustomButton from '@/components/misc/CustomButton'
 import CustomHeader from '@/components/misc/CustomHeader'
+import AddToCartSuccessModal from '@/components/modals/AddToCartSuccessModal'
+
 import StarRating from '@/components/ui/StarRating'
 import { images } from '@/constants'
 import { getMenuById } from '@/lib/queries'
 import { useCartStore } from '@/store/cart.store'
 import { useQuery } from '@tanstack/react-query'
-import { router, useLocalSearchParams } from 'expo-router'
+import { useLocalSearchParams } from 'expo-router'
 import React, { useState } from 'react'
-import { Image, Modal, Text, TouchableOpacity, View } from 'react-native'
+import { Image, Text, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 
@@ -175,39 +177,11 @@ const MenuPage = () => {
                 />
             </View>
 
-            <Modal
+            <AddToCartSuccessModal 
                 visible={showSuccessModal}
-                transparent={true}
-                animationType="fade"
-            >
-                <View className="flex-1 bg-black/50 items-center justify-center px-5">
-                    <View className="bg-white p-8 rounded-2xl items-center gap-4 w-full max-w-sm">
-                        <Image source={images.success} className="size-24" resizeMode="contain" />
-                        <Text className="h3-bold text-dark-100">Added to Cart!</Text>
-                        <Text className="paragraph-medium text-gray-200 text-center">
-                            {addedQuantity} item(s) successfully added to your cart
-                        </Text>
-                        <View className="w-full gap-3">
-                            <CustomButton 
-                                title="Continue Shopping"
-                                onPress={() => {
-                                    setShowSuccessModal(false)
-                                    router.push('/(tabs)/search')
-                                }}
-                                style="bg-primary/10 border-primary border"
-                                textStyle="paragraph-semibold text-primary"
-                            />
-                            <CustomButton 
-                                title="Checkout"
-                                onPress={() => {
-                                    setShowSuccessModal(false)
-                                    router.push('/(tabs)/cart')
-                                }}
-                            />
-                        </View>
-                    </View>
-                </View>
-            </Modal>
+                onClose={() => setShowSuccessModal(false)}
+                addedQuantity={addedQuantity}
+            />
         </SafeAreaView>
     )
 }
