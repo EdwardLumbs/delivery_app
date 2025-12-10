@@ -2,84 +2,78 @@ import CustomHeader from '@/components/CustomHeader'
 import OrderCard from '@/components/OrderCard'
 import { images } from '@/constants'
 import { getActiveOrders, getPreviousOrders, Order } from '@/lib/queries'
+import { queryClient } from '@/lib/queryClient'
 import { subscribeToOrderUpdates } from '@/lib/realtime'
 import useAuthStore from '@/store/auth.store'
-import React, { useEffect, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import React, { useEffect } from 'react'
 import { ActivityIndicator, Image, RefreshControl, SectionList, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 const Orders = () => {
     const { user } = useAuthStore()
-    const [activeOrders, setActiveOrders] = useState<Order[]>([])
-    const [previousOrders, setPreviousOrders] = useState<Order[]>([])
-    const [isLoading, setIsLoading] = useState(true)
-    const [isRefreshing, setIsRefreshing] = useState(false)
 
-    // Fetch orders on mount
-    useEffect(() => {
-        if (user?.id) {
-            fetchOrders()
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [user?.id])
+    // Fetch active orders with React Query
+    const { data: activeOrders = [], isLoading: isLoadingActive, refetch: refetchActive } = useQuery({
+        queryKey: ['active-orders', user?.id],
+        queryFn: () => getActiveOrders(user!.id),
+        enabled: !!user?.id,
+        staleTime: 30 * 1000, // 30 seconds (orders change frequently)
+    })
 
-    // Set up real-time subscription for active orders
+    // Fetch previous orders with React Query
+    const { data: previousOrders = [], isLoading: isLoadingPrevious, refetch: refetchPrevious } = useQuery({
+        queryKey: ['previous-orders', user?.id],
+        queryFn: () => getPreviousOrders(user!.id, 20),
+        enabled: !!user?.id,
+        staleTime: 5 * 60 * 1000, // 5 minutes (previous orders don't change often)
+    })
+
+    const isLoading = isLoadingActive || isLoadingPrevious
+
+    // Set up real-time subscription to update React Query cache
     useEffect(() => {
         if (!user?.id) return
 
-        const unsubscribe = subscribeToOrderUpdates(user.id, handleOrderUpdate)
+        const unsubscribe = subscribeToOrderUpdates(user.id, (updatedOrder) => {
+            const isActive = ['pending', 'preparing', 'out_for_delivery'].includes(updatedOrder.status)
+            
+            if (isActive) {
+                // Update active orders cache
+                queryClient.setQueryData(['active-orders', user.id], (old: Order[] = []) => {
+                    const exists = old.find(o => o.id === updatedOrder.id)
+                    if (exists) {
+                        return old.map(o => o.id === updatedOrder.id ? updatedOrder : o)
+                    }
+                    return [updatedOrder, ...old]
+                })
+                
+                // Remove from previous orders cache if it was there
+                queryClient.setQueryData(['previous-orders', user.id], (old: Order[] = []) => {
+                    return old.filter(o => o.id !== updatedOrder.id)
+                })
+            } else {
+                // Move to previous orders cache
+                queryClient.setQueryData(['previous-orders', user.id], (old: Order[] = []) => {
+                    const exists = old.find(o => o.id === updatedOrder.id)
+                    if (exists) {
+                        return old.map(o => o.id === updatedOrder.id ? updatedOrder : o)
+                    }
+                    return [updatedOrder, ...old]
+                })
+                
+                // Remove from active orders cache
+                queryClient.setQueryData(['active-orders', user.id], (old: Order[] = []) => {
+                    return old.filter(o => o.id !== updatedOrder.id)
+                })
+            }
+        })
 
         return unsubscribe
     }, [user?.id])
 
-    const handleOrderUpdate = (updatedOrder: Order) => {
-        const isActive = ['pending', 'preparing', 'out_for_delivery'].includes(updatedOrder.status)
-        
-        if (isActive) {
-            // Update or add to active orders
-            setActiveOrders(prev => {
-                const exists = prev.find(o => o.id === updatedOrder.id)
-                if (exists) {
-                    return prev.map(o => o.id === updatedOrder.id ? updatedOrder : o)
-                }
-                return [updatedOrder, ...prev]
-            })
-            // Remove from previous orders if it was there
-            setPreviousOrders(prev => prev.filter(o => o.id !== updatedOrder.id))
-        } else {
-            // Move to previous orders
-            setPreviousOrders(prev => {
-                const exists = prev.find(o => o.id === updatedOrder.id)
-                if (exists) {
-                    return prev.map(o => o.id === updatedOrder.id ? updatedOrder : o)
-                }
-                return [updatedOrder, ...prev]
-            })
-            // Remove from active orders
-            setActiveOrders(prev => prev.filter(o => o.id !== updatedOrder.id))
-        }
-    }
-
-    const fetchOrders = async () => {
-        try {
-            setIsLoading(true)
-            const [active, previous] = await Promise.all([
-                getActiveOrders(user!.id),
-                getPreviousOrders(user!.id, 20)
-            ])
-            setActiveOrders(active)
-            setPreviousOrders(previous)
-        } catch (error) {
-            console.error('Error fetching orders:', error)
-        } finally {
-            setIsLoading(false)
-        }
-    }
-
     const handleRefresh = async () => {
-        setIsRefreshing(true)
-        await fetchOrders()
-        setIsRefreshing(false)
+        await Promise.all([refetchActive(), refetchPrevious()])
     }
 
     const sections = [
@@ -131,7 +125,7 @@ const Orders = () => {
                 )}
                 refreshControl={
                     <RefreshControl
-                        refreshing={isRefreshing}
+                        refreshing={isLoadingActive || isLoadingPrevious}
                         onRefresh={handleRefresh}
                         colors={['#FE8C00']}
                         tintColor='#FE8C00'
