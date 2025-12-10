@@ -95,6 +95,84 @@ export async function getUserOrders(userId: string, limit: number = 20): Promise
     return data as Order[]
 }
 
+// Get active orders (pending, preparing, out_for_delivery)
+export async function getActiveOrders(userId: string): Promise<Order[]> {
+    const { data, error } = await supabase
+        .from('orders')
+        .select('*')
+        .eq('user_id', userId)
+        .in('status', ['pending', 'preparing', 'out_for_delivery'])
+        .order('created_at', { ascending: false })
+
+    if (error) throw error
+
+    return data as Order[]
+}
+
+// Get previous orders (delivered, cancelled)
+export async function getPreviousOrders(userId: string, limit: number = 20): Promise<Order[]> {
+    const { data, error } = await supabase
+        .from('orders')
+        .select('*')
+        .eq('user_id', userId)
+        .in('status', ['delivered', 'cancelled'])
+        .order('created_at', { ascending: false })
+        .limit(limit)
+
+    if (error) throw error
+
+    return data as Order[]
+}
+
+export interface CreateOrderParams {
+    userId: string
+    totalPrice: number
+    deliveryFee: number
+    deliveryAddress: string
+    items: {
+        menuItemId: string
+        quantity: number
+        price: number
+        customizations?: string[]
+    }[]
+}
+
+export async function createOrder(params: CreateOrderParams): Promise<Order> {
+    const { userId, totalPrice, deliveryFee, deliveryAddress, items } = params
+    
+    // Create the order
+    const { data: order, error: orderError } = await supabase
+        .from('orders')
+        .insert({
+            user_id: userId,
+            status: 'pending',
+            total_price: totalPrice,
+            delivery_fee: deliveryFee,
+            delivery_address: deliveryAddress
+        })
+        .select()
+        .single()
+
+    if (orderError) throw orderError
+
+    // Create order items
+    const orderItems = items.map(item => ({
+        order_id: order.id,
+        menu_id: item.menuItemId,
+        quantity: item.quantity,
+        price: item.price,
+        customizations: item.customizations || []
+    }))
+
+    const { error: itemsError } = await supabase
+        .from('order_items')
+        .insert(orderItems)
+
+    if (itemsError) throw itemsError
+
+    return order as Order
+}
+
 // User profile queries
 export interface UpdateUserProfileParams {
     userId: string

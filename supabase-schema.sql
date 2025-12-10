@@ -167,6 +167,16 @@ CREATE POLICY "Users can read own order items" ON order_items
         )
     );
 
+-- Users can create items for their own orders
+CREATE POLICY "Users can create own order items" ON order_items
+    FOR INSERT WITH CHECK (
+        EXISTS (
+            SELECT 1 FROM orders
+            WHERE orders.id = order_items.order_id
+            AND orders.user_id = auth.uid()
+        )
+    );
+
 -- Create index
 CREATE INDEX IF NOT EXISTS idx_order_items_order ON order_items(order_id);
 

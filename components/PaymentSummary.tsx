@@ -23,6 +23,7 @@ interface PaymentSummaryProps {
     buttonTitle: string
     onButtonPress: () => void
     buttonDisabled?: boolean
+    isLoading?: boolean
 }
 
 const PaymentSummary = ({
@@ -32,7 +33,8 @@ const PaymentSummary = ({
     totalItems,
     buttonTitle,
     onButtonPress,
-    buttonDisabled = false
+    buttonDisabled = false,
+    isLoading = false
 }: PaymentSummaryProps) => {
     const finalTotal = subtotal + deliveryFee - discount
 
@@ -69,6 +71,8 @@ const PaymentSummary = ({
                 title={buttonTitle}
                 onPress={onButtonPress}
                 style={buttonDisabled ? 'opacity-50 mt-5' : 'mt-5'}
+                isLoading={isLoading}
+                disabled={buttonDisabled}
             />
         </View>
     )

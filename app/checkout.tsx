@@ -1,18 +1,22 @@
 import CheckoutItem from '@/components/CheckoutItem'
 import CustomHeader from '@/components/CustomHeader'
 import PaymentSummary from '@/components/PaymentSummary'
+import SuccessModal from '@/components/SuccessModal'
 import { parseCoordinates } from '@/lib/helpers'
+import { createOrder } from '@/lib/queries'
 import useAuthStore from '@/store/auth.store'
 import { useCartStore } from '@/store/cart.store'
 import { router } from 'expo-router'
-import React, { useEffect } from 'react'
-import { FlatList, Text, TouchableOpacity, View } from 'react-native'
+import React, { useEffect, useState } from 'react'
+import { Alert, FlatList, Text, TouchableOpacity, View } from 'react-native'
 import MapView, { Marker } from 'react-native-maps'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 const Checkout = () => {
-    const { items, getTotalPrice, setHasVisitedCheckout } = useCartStore()
+    const { items, getTotalPrice, setHasVisitedCheckout, clearCart } = useCartStore()
     const { user } = useAuthStore()
+    const [isPlacingOrder, setIsPlacingOrder] = useState(false)
+    const [showSuccessModal, setShowSuccessModal] = useState(false)
     
     // Mark that user has visited checkout (for floating button)
     useEffect(() => {
@@ -24,6 +28,56 @@ const Checkout = () => {
     
     const subtotal = getTotalPrice()
     const deliveryFee = 50 // Placeholder for now
+
+    const handlePlaceOrder = async () => {
+        try {
+            setIsPlacingOrder(true)
+            
+            if (!user?.id) {
+                Alert.alert('Error', 'User not found')
+                return
+            }
+
+            if (!user?.address_1) {
+                Alert.alert('Error', 'Delivery address is required')
+                return
+            }
+
+            if (checkoutItems.length === 0) {
+                Alert.alert('Error', 'No items in cart')
+                return
+            }
+
+            // Prepare order data
+            const orderItems = checkoutItems.map(item => ({
+                menuItemId: item.id,
+                quantity: 1, // Each cart item represents 1 quantity
+                price: item.price,
+                customizations: (item.customizations || []).map(c => c.name)
+            }))
+
+            // Create the order
+            const order = await createOrder({
+                userId: user.id,
+                totalPrice: subtotal + deliveryFee,
+                deliveryFee: deliveryFee,
+                deliveryAddress: user.address_1,
+                items: orderItems
+            })
+
+            console.log('Order created successfully:', order.id)
+            
+            // Clear cart and show success modal
+            clearCart()
+            setShowSuccessModal(true)
+
+        } catch (error: any) {
+            console.log('Place order error:', error)
+            Alert.alert('Error', 'Failed to place order. Please try again.')
+        } finally {
+            setIsPlacingOrder(false)
+        }
+    }
 
     return (
         <SafeAreaView className='bg-white h-full'>
@@ -123,13 +177,22 @@ const Checkout = () => {
                             deliveryFee={deliveryFee}
                             totalItems={checkoutItems.length}
                             buttonTitle='Place Order'
-                            onButtonPress={() => {
-                                // TODO: Implement order placement
-                                console.log('Place order pressed')
-                            }}
+                            onButtonPress={handlePlaceOrder}
+                            isLoading={isPlacingOrder}
                         />
                     </View>
                 )}
+            />
+
+            <SuccessModal
+                visible={showSuccessModal}
+                title="Order Placed Successfully!"
+                message="Your order has been placed and is waiting for confirmation. You can track your order in the Orders tab."
+                buttonText="View Orders"
+                onClose={() => {
+                    setShowSuccessModal(false)
+                    router.replace('/(tabs)/orders')
+                }}
             />
         </SafeAreaView>
     )
