@@ -46,7 +46,7 @@
   - Active Orders (pending, preparing, out_for_delivery)
   - Previous Orders (delivered, cancelled)
   - Real-time status updates
-- ⬜ Order Details View (ONLY FOR ACTIVE ORDERS)
+- ✅ Order Details View (ONLY FOR ACTIVE ORDERS)
   - View individual order with items
   - Show delivery address and status
   - Order timeline/tracking
@@ -98,6 +98,10 @@
   - Driver marks orders as delivered
   - Customer confirmation (optional)
   - Admin can override delivery status
+- ⬜ Order Details View (ONLY FOR ACTIVE ORDERS)
+  - driver location
+  - Show delivery address and status
+  - Order timeline/tracking
 
 ### **PHASE 4: Enhanced User Experience** 🎯
 - ⬜ Cart Persistence

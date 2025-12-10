@@ -1,4 +1,4 @@
-import CustomButton from '@/components/CustomButton'
+import CustomButton from '@/components/misc/CustomButton'
 import { PaymentInfoStripeProps } from '@/type'
 import cn from 'clsx'
 import React from 'react'

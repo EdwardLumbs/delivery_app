@@ -1,4 +1,4 @@
-import CustomButton from '@/components/CustomButton'
+import CustomButton from '@/components/misc/CustomButton'
 import { useCartStore } from '@/store/cart.store'
 import { MenuItem } from '@/type'
 import { Image, Platform, Text, TouchableOpacity } from 'react-native'

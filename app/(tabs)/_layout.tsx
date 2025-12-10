@@ -1,7 +1,7 @@
-import FloatingCheckoutButton from "@/components/FloatingCheckoutButton";
-
-import LocationSetupModal from "@/components/LocationSetupModal";
-import SuccessModal from "@/components/SuccessModal";
+import LocationSetupModal from "@/components/modals/LocationSetupModal";
+import SuccessModal from "@/components/modals/SuccessModal";
+import FloatingActiveOrderButton from "@/components/ui/FloatingActiveOrderButton";
+import FloatingCheckoutButton from "@/components/ui/FloatingCheckoutButton";
 import { images } from "@/constants";
 import useAuthStore from "@/store/auth.store";
 import { TabBarIconProps } from "@/type";
@@ -126,6 +126,7 @@ export default function TabLayout() {
                 }}
             />
             
+            <FloatingActiveOrderButton />
             <FloatingCheckoutButton />
             
             <Tabs

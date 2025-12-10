@@ -1,4 +1,4 @@
-import CustomButton from '@/components/CustomButton'
+import CustomButton from '@/components/misc/CustomButton'
 import { images } from '@/constants'
 import { BackHandler, Image, Modal, Text, View } from 'react-native'
 

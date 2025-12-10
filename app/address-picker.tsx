@@ -1,5 +1,5 @@
-import CustomButton from '@/components/CustomButton'
-import OutsideDeliveryZoneModal from '@/components/OutsideDeliveryZoneModal'
+import CustomButton from '@/components/misc/CustomButton'
+import OutsideDeliveryZoneModal from '@/components/modals/OutsideDeliveryZoneModal'
 import { images } from '@/constants'
 import { getDeliveryZonePolygon, isWithinDeliveryZone } from '@/lib/geospatial'
 import { parseCoordinates } from '@/lib/helpers'

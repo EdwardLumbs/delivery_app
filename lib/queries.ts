@@ -109,6 +109,22 @@ export async function getActiveOrders(userId: string): Promise<Order[]> {
     return data as Order[]
 }
 
+// Get order by ID
+export async function getOrderById(orderId: string): Promise<Order | null> {
+    const { data, error } = await supabase
+        .from('orders')
+        .select('*')
+        .eq('id', orderId)
+        .single()
+
+    if (error) {
+        console.error('getOrderById error:', error)
+        return null
+    }
+
+    return data as Order
+}
+
 // Get previous orders (delivered, cancelled)
 export async function getPreviousOrders(userId: string, limit: number = 20): Promise<Order[]> {
     const { data, error } = await supabase

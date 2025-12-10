@@ -1,5 +1,5 @@
-import CustomButton from '@/components/CustomButton'
-import CustomHeader from '@/components/CustomHeader'
+import CustomButton from '@/components/misc/CustomButton'
+import CustomHeader from '@/components/misc/CustomHeader'
 import { images } from '@/constants'
 import { signOut } from '@/lib/supabase'
 import useAuthStore from '@/store/auth.store'

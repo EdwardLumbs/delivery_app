@@ -1,5 +1,5 @@
-import CustomButton from '@/components/CustomButton';
-import CustomInput from '@/components/CustomInput';
+import CustomButton from '@/components/misc/CustomButton';
+import CustomInput from '@/components/misc/CustomInput';
 import { images } from '@/constants';
 import { signIn } from '@/lib/supabase';
 import useAuthStore from '@/store/auth.store';

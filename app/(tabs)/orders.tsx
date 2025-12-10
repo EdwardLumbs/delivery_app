@@ -1,5 +1,5 @@
-import CustomHeader from '@/components/CustomHeader'
-import OrderCard from '@/components/OrderCard'
+import CustomHeader from '@/components/misc/CustomHeader'
+import OrderCard from '@/components/cards/OrderCard'
 import { images } from '@/constants'
 import { getActiveOrders, getPreviousOrders, Order } from '@/lib/queries'
 import { queryClient } from '@/lib/queryClient'
@@ -105,7 +105,12 @@ const Orders = () => {
         <SafeAreaView className='bg-white h-full'>
             <SectionList
                 sections={sections}
-                renderItem={({ item }) => <OrderCard order={item} />}
+                renderItem={({ item, section }) => (
+                    <OrderCard 
+                        order={item} 
+                        isActive={section.title === 'Active Orders'}
+                    />
+                )}
                 renderSectionHeader={({ section: { title } }) => renderSectionHeader(title)}
                 keyExtractor={(item) => item.id}
                 contentContainerClassName='pb-28 px-5 pt-5'

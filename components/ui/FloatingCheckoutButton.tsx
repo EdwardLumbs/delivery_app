@@ -15,9 +15,9 @@ const FloatingCheckoutButton = () => {
     // Don't show if:
     // - No items or all excluded
     // - User hasn't visited checkout page yet
-    // - Currently on cart, checkout, or edit-profile pages
+    // - Currently on cart, checkout, edit-profile, or profile pages
     const currentRoute = segments.join('/')
-    if (totalItems === 0 || !hasVisitedCheckout || currentRoute.includes('cart') || currentRoute.includes('checkout') || currentRoute.includes('edit-profile')) return null
+    if (totalItems === 0 || !hasVisitedCheckout || currentRoute.includes('cart') || currentRoute.includes('checkout') || currentRoute.includes('edit-profile') || currentRoute.includes('profile')) return null
 
     return (
         <View className='absolute bottom-36 left-5 right-5 z-50'>

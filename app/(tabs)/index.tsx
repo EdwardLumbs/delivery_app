@@ -1,4 +1,4 @@
-import CartButton from "@/components/CartButton";
+import CartButton from "@/components/misc/CartButton";
 import { images, offers } from "@/constants";
 import useAuthStore from "@/store/auth.store";
 import cn from "clsx";
