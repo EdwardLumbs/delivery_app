@@ -1,9 +1,10 @@
 import CustomHeader from '@/components/CustomHeader'
+import OrderCard from '@/components/OrderCard'
 import { images } from '@/constants'
 import { getUserOrders, Order } from '@/lib/queries'
 import useAuthStore from '@/store/auth.store'
 import React, { useEffect, useState } from 'react'
-import { ActivityIndicator, FlatList, Image, Text, View } from 'react-native'
+import { ActivityIndicator, Image, SectionList, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 const Orders = () => {
@@ -38,31 +39,10 @@ const Orders = () => {
         ['delivered', 'cancelled'].includes(order.status)
     )
 
-    const renderOrder = ({ item }: { item: Order }) => (
-        <View className='bg-white rounded-2xl p-4 mb-3 border border-gray-100'>
-            <View className='flex-row justify-between items-start mb-2'>
-                <View>
-                    <Text className='body-bold text-dark-100'>
-                        Order #{item.order_number || item.id.slice(0, 8)}
-                    </Text>
-                    <Text className='small-regular text-gray-200'>
-                        {new Date(item.created_at).toLocaleDateString()}
-                    </Text>
-                </View>
-                <View className='bg-primary/10 px-3 py-1 rounded-full'>
-                    <Text className='small-bold text-primary capitalize'>
-                        {item.status}
-                    </Text>
-                </View>
-            </View>
-            <View className='flex-row justify-between items-center mt-2'>
-                <Text className='paragraph-medium text-gray-200'>Total</Text>
-                <Text className='h4-bold text-dark-100'>
-                    ₱{(item.total_price + item.delivery_fee).toFixed(2)}
-                </Text>
-            </View>
-        </View>
-    )
+    const sections = [
+        { title: 'Active Orders', data: activeOrders },
+        { title: 'Past Orders', data: pastOrders }
+    ].filter(section => section.data.length > 0)
 
     const renderSectionHeader = (title: string) => (
         <View className='mb-3'>
@@ -86,17 +66,13 @@ const Orders = () => {
 
     return (
         <SafeAreaView className='bg-white h-full'>
-            <FlatList
-                data={[...activeOrders, ...pastOrders]}
-                renderItem={renderOrder}
+            <SectionList
+                sections={sections}
+                renderItem={({ item }) => <OrderCard order={item} />}
+                renderSectionHeader={({ section: { title } }) => renderSectionHeader(title)}
                 keyExtractor={(item) => item.id}
                 contentContainerClassName='pb-28 px-5 pt-5'
-                ListHeaderComponent={() => (
-                    <>
-                        <CustomHeader title="Your Orders" />
-                        {activeOrders.length > 0 && renderSectionHeader('Active Orders')}
-                    </>
-                )}
+                ListHeaderComponent={() => <CustomHeader title="Your Orders" />}
                 ListEmptyComponent={() => (
                     <View className='items-center justify-center' style={{ minHeight: 400 }}>
                         <Image 
@@ -110,16 +86,6 @@ const Orders = () => {
                         </Text>
                     </View>
                 )}
-                ItemSeparatorComponent={() => {
-                    // Show divider between active and past orders
-                    const currentIndex = orders.findIndex(order => 
-                        ['delivered', 'cancelled'].includes(order.status)
-                    )
-                    if (currentIndex === activeOrders.length && pastOrders.length > 0) {
-                        return renderSectionHeader('Past Orders')
-                    }
-                    return null
-                }}
             />
         </SafeAreaView>
     )
