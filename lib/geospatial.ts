@@ -92,25 +92,12 @@ export async function isWithinDeliveryZone(
     }
 }
 
-// Cache for delivery zone polygon (1 hour TTL)
-let deliveryZoneCache: {
-    polygon: {latitude: number, longitude: number}[] | null
-    timestamp: number
-} | null = null
-
-const DELIVERY_ZONE_CACHE_TTL = 60 * 60 * 1000 // 1 hour
-
 /**
  * Get delivery zone polygon coordinates for map display
+ * NOTE: Use with React Query for automatic caching
  * @returns Array of coordinates [{latitude, longitude}] or null
  */
 export async function getDeliveryZonePolygon(): Promise<{latitude: number, longitude: number}[] | null> {
-    // Check cache first
-    if (deliveryZoneCache && Date.now() - deliveryZoneCache.timestamp < DELIVERY_ZONE_CACHE_TTL) {
-        console.log('Using cached delivery zone polygon')
-        return deliveryZoneCache.polygon
-    }
-
     try {
         const { data: geoJsonData, error: geoJsonError } = await supabase.rpc('get_delivery_zone_geojson')
         
@@ -125,13 +112,7 @@ export async function getDeliveryZonePolygon(): Promise<{latitude: number, longi
             longitude: coord[0]
         }))
 
-        // Cache the result
-        deliveryZoneCache = {
-            polygon: coordinates,
-            timestamp: Date.now()
-        }
-
-        console.log('Delivery zone polygon fetched and cached')
+        console.log('Delivery zone polygon fetched')
         return coordinates
     } catch (error) {
         console.error('getDeliveryZonePolygon error:', error)

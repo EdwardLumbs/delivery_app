@@ -3,8 +3,8 @@ import CustomHeader from '@/components/CustomHeader'
 import StarRating from '@/components/StarRating'
 import { images } from '@/constants'
 import { getMenuById } from '@/lib/queries'
-import { useSupabase } from '@/lib/useSupabase'
 import { useCartStore } from '@/store/cart.store'
+import { useQuery } from '@tanstack/react-query'
 import { router, useLocalSearchParams } from 'expo-router'
 import React, { useState } from 'react'
 import { Image, Modal, Text, TouchableOpacity, View } from 'react-native'
@@ -18,12 +18,14 @@ const MenuPage = () => {
     const [showSuccessModal, setShowSuccessModal] = useState(false)
     const [addedQuantity, setAddedQuantity] = useState(0)
     
-    const { data: menuItem, loading } = useSupabase({
-        fn: () => getMenuById(id as string),
-        skip: !id
+    const { data: menuItem, isLoading } = useQuery({
+        queryKey: ['menu-item', id],
+        queryFn: () => getMenuById(id as string),
+        enabled: !!id, // Only run query if id exists
+        staleTime: 10 * 60 * 1000, // 10 minutes (menu items don't change often)
     })
 
-    if (loading) {
+    if (isLoading) {
         return (
             <SafeAreaView className='flex-1 items-center justify-center'>
                 <Text className='h1-bold'>Loading...</Text>

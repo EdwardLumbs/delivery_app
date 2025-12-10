@@ -5,6 +5,7 @@ import { getDeliveryZonePolygon, isWithinDeliveryZone } from '@/lib/geospatial'
 import { parseCoordinates } from '@/lib/helpers'
 import { updateUserAddress } from '@/lib/queries'
 import useAuthStore from '@/store/auth.store'
+import { useQuery } from '@tanstack/react-query'
 import * as Location from 'expo-location'
 import { router, useLocalSearchParams } from 'expo-router'
 import React, { useEffect, useRef, useState } from 'react'
@@ -28,9 +29,15 @@ const AddressPicker = () => {
         latitudeDelta: 0.01,
         longitudeDelta: 0.01,
     })
-    const [deliveryZone, setDeliveryZone] = useState<{latitude: number, longitude: number}[] | null>(null)
     const [showOutsideZoneModal, setShowOutsideZoneModal] = useState(false)
     const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+    // Fetch delivery zone polygon with React Query
+    const { data: deliveryZone = null } = useQuery({
+        queryKey: ['delivery-zone-polygon'],
+        queryFn: getDeliveryZonePolygon,
+        staleTime: 60 * 60 * 1000, // 1 hour (delivery zone rarely changes)
+    })
 
     useEffect(() => {
         initializeMap()
@@ -46,12 +53,6 @@ const AddressPicker = () => {
 
     const initializeMap = async () => {
         setIsLoading(true)
-        
-        // Load delivery zone polygon
-        const polygon = await getDeliveryZonePolygon()
-        if (polygon) {
-            setDeliveryZone(polygon)
-        }
         
         // Check if user has saved coordinates for this address field
         let initialLat = 14.4444  // Default Kawit

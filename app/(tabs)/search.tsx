@@ -3,36 +3,36 @@ import Filter from '@/components/Filter'
 import MenuCard from '@/components/MenuCard'
 import SearchBar from '@/components/SearchBar'
 import { images } from '@/constants'
-import useMenuStore from '@/store/menu.store'
+import { getCategories, getMenu } from '@/lib/queries'
 import { MenuItem } from '@/type'
+import { useQuery } from '@tanstack/react-query'
 import cn from 'clsx'
 import { router, useLocalSearchParams } from 'expo-router'
-import { useEffect } from 'react'
 import { FlatList, Image, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 const Search = () => {
     const {category, query} = useLocalSearchParams<{query: string; category: string}>()
-    const { menuItems, categories, isLoading, fetchMenu, fetchCategories, shouldRefetch } = useMenuStore()
 
-    // Fetch data on mount or when cache is stale
-    useEffect(() => {
-        console.log('Search page mounted, checking cache...')
-        
-        // Check if we should refetch based on TTL
-        if (shouldRefetch()) {
-            console.log('Cache is stale or empty, fetching from database')
-            fetchMenu({ category: category || '', query: query || '', limit: 6 })
-        } else {
-            console.log('Using cached menu data')
-        }
-        
-        // Fetch categories if not cached (they rarely change)
-        if (categories.length === 0) {
-            fetchCategories()
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [category, query])
+    // Fetch menu items with React Query
+    const { data: menuItems = [], isLoading: isLoadingMenu } = useQuery({
+        queryKey: ['menu', category, query],
+        queryFn: () => getMenu({ 
+            category: category || '', 
+            query: query || '', 
+            limit: 6 
+        }),
+        staleTime: 5 * 60 * 1000, // 5 minutes
+    })
+
+    // Fetch categories with React Query
+    const { data: categories = [] } = useQuery({
+        queryKey: ['categories'],
+        queryFn: getCategories,
+        staleTime: 30 * 60 * 1000, // 30 minutes (categories rarely change)
+    })
+
+    const isLoading = isLoadingMenu
 
     // Filter menu items based on current category and query
     const filteredMenuItems = menuItems.filter(item => {

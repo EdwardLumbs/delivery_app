@@ -99,7 +99,24 @@
   - Save favorite menu items
   - Quick reorder from favorites
 
-### **PHASE 5: Business Intelligence** 📈
+### **PHASE 5: App Configuration System** ⚙️
+- ⬜ **App Config Table** (Database)
+  - Store delivery pricing rules
+  - Store restaurant location(s)
+  - Store delivery zone polygon
+  - Store business hours
+  - Store app settings (min order, max distance, etc.)
+- ⬜ **Admin Config Management**
+  - Update delivery fees from admin dashboard
+  - Update restaurant location
+  - Update delivery zone (visual editor)
+  - Update business hours
+- ⬜ **Dynamic Configuration**
+  - App reads config from database (not hardcoded)
+  - Changes take effect immediately
+  - No code deployment needed for config changes
+
+### **PHASE 6: Business Intelligence** 📈
 - ⬜ Analytics Dashboard
   - Sales reports (daily, weekly, monthly)
   - Popular items analysis
@@ -114,7 +131,7 @@
   - Order history per customer
   - Customer lifetime value
 
-### **PHASE 6: Advanced Features** 🌟
+### **PHASE 7: Advanced Features** 🌟
 - ⬜ Route Optimization
   - Efficient delivery routing algorithms
   - Multiple delivery optimization
