@@ -30,7 +30,15 @@ const AddressPicker = () => {
         longitudeDelta: 0.01,
     })
     const [showOutsideZoneModal, setShowOutsideZoneModal] = useState(false)
+    const [isOutsideDeliveryZone, setIsOutsideDeliveryZone] = useState(false)
     const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+    const mapRef = useRef<MapView>(null)
+    
+    // Default delivery zone center (will be moved to app config later)
+    const DEFAULT_DELIVERY_CENTER = {
+        latitude: 14.4444,
+        longitude: 120.9025
+    }
 
     // Fetch delivery zone polygon with React Query
     const { data: deliveryZone = null } = useQuery({
@@ -54,11 +62,30 @@ const AddressPicker = () => {
     const initializeMap = async () => {
         setIsLoading(true)
         
-        // Check if user has saved coordinates for this address field
-        let initialLat = 14.4444  // Default Kawit
-        let initialLng = 120.9025
+        let initialLat = null
+        let initialLng = null
         
-        if (user) {
+        // For initial setup (new users), prioritize current GPS location
+        if (isRequired) {
+            console.log('Initial setup detected - trying current location first')
+            try {
+                const { status } = await Location.requestForegroundPermissionsAsync()
+                if (status === 'granted') {
+                    const currentLocation = await Location.getCurrentPositionAsync({
+                        accuracy: Location.Accuracy.Balanced
+                    })
+                    initialLat = currentLocation.coords.latitude
+                    initialLng = currentLocation.coords.longitude
+                    console.log('Got current location for new user:', initialLat, initialLng)
+                }
+            } catch (error) {
+                console.log('Failed to get current location for new user:', error)
+            }
+        }
+        
+        // For edit profile/checkout, use saved coordinates first
+        if (!isRequired && user) {
+            console.log('Edit mode detected - checking saved coordinates first')
             let coordsToUse = null
             
             if (addressField === 'address_1' && user.address_1_coords) {
@@ -73,11 +100,36 @@ const AddressPicker = () => {
                 if (parsedCoords) {
                     initialLng = parsedCoords[0]  // longitude
                     initialLat = parsedCoords[1]  // latitude
+                    console.log('Using saved coordinates:', initialLat, initialLng)
                 }
             }
         }
         
-        // Set region to saved address or default
+        // Fallback: If still no coordinates, try current location (for edit mode) or use default
+        if (!initialLat || !initialLng) {
+            try {
+                const { status } = await Location.requestForegroundPermissionsAsync()
+                if (status === 'granted') {
+                    const currentLocation = await Location.getCurrentPositionAsync({
+                        accuracy: Location.Accuracy.Balanced
+                    })
+                    initialLat = currentLocation.coords.latitude
+                    initialLng = currentLocation.coords.longitude
+                    console.log('Using fallback current location:', initialLat, initialLng)
+                }
+            } catch (error) {
+                console.log('Failed to get fallback current location:', error)
+            }
+        }
+        
+        // Final fallback: Use default center point (will be configurable later)
+        if (!initialLat || !initialLng) {
+            initialLat = 14.4444  // Default Kawit (will be moved to app config)
+            initialLng = 120.9025
+            console.log('Using default coordinates:', initialLat, initialLng)
+        }
+        
+        // Set region to saved address, current location, or default
         setRegion({
             latitude: initialLat,
             longitude: initialLng,
@@ -135,6 +187,10 @@ const AddressPicker = () => {
                 
                 setAddress(addr)
             }
+            
+            // Check if current location is outside delivery zone
+            const isInZone = await isWithinDeliveryZone(longitude, latitude)
+            setIsOutsideDeliveryZone(!isInZone)
         } catch (error) {
             console.log('reverseGeocode error:', error)
         } finally {
@@ -155,6 +211,24 @@ const AddressPicker = () => {
         debounceTimer.current = setTimeout(() => {
             reverseGeocode(newRegion.latitude, newRegion.longitude)
         }, 800)
+    }
+
+    const goToDeliveryZone = () => {
+        const newRegion = {
+            latitude: DEFAULT_DELIVERY_CENTER.latitude,
+            longitude: DEFAULT_DELIVERY_CENTER.longitude,
+            latitudeDelta: 0.01,
+            longitudeDelta: 0.01,
+        }
+        
+        // Animate to the delivery zone center
+        mapRef.current?.animateToRegion(newRegion, 1000)
+        
+        // Update the region state
+        setRegion(newRegion)
+        
+        // Get the address for the new location
+        reverseGeocode(DEFAULT_DELIVERY_CENTER.latitude, DEFAULT_DELIVERY_CENTER.longitude)
     }
 
     const saveLocationDirectlyQuiet = async (addressText: string, geoJson: any) => {
@@ -334,6 +408,7 @@ const AddressPicker = () => {
 
             <View className='flex-1 relative'>
                 <MapView
+                    ref={mapRef}
                     style={{ flex: 1 }}
                     initialRegion={region}
                     onRegionChange={handleRegionChange}
@@ -385,6 +460,15 @@ const AddressPicker = () => {
                         )}
                     </View>
                 </View>
+
+                {isOutsideDeliveryZone && (
+                    <CustomButton 
+                        title='Go to Delivery Zone'
+                        onPress={goToDeliveryZone}
+                        style='bg-blue-500'
+                        textStyle='text-white'
+                    />
+                )}
 
                 <CustomButton 
                     title='Confirm Address'

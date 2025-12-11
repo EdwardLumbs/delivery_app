@@ -81,27 +81,40 @@
 
 
 ### **PHASE 3: Delivery System** 🚚
-- ⬜ Driver Management
+- ⬜ **Smart Driver Management**
   - Driver profiles and authentication
-  - Driver availability status
-  - Admin assigns drivers to orders
-- ⬜ Order Assignment (from Admin Dashboard)
-  - Admin manually assigns accepted orders to available drivers
-  - Driver receives order notification
-  - Driver can view order details and delivery address
-- ⬜ Real-time Tracking
-  - Live driver location updates using PostGIS
+  - Driver availability status and capacity (max 3-5 concurrent orders)
+  - Intelligent auto-assignment based on route optimization
+- ⬜ **Route Optimization Engine**
+  - Geographic clustering of orders (within 2-3km radius)
+  - Traveling Salesman Problem (TSP) solver for optimal delivery sequence
+  - Real-time route recalculation when new orders are placed
+  - Dynamic order reassignment for maximum efficiency
+  - Traffic-aware routing with real-time data integra
+  - **Inefficiency Prevention**
+  - **Scenario 1**: Orders on opposite ends of delivery zone
+    - Solution: Geographic clustering before assignment
+    - Batch orders within proximity zo
+  - Dricenario 2**: Driver en route, new order placed nearby
+    - Solution: Real-time route recalculation
+    - Insert new delivery into existing route if efficient
+  - **Scenario 3**: Multiple trips to same area
+    - Solution: Time-based batching (5-10 min hold for nea)
+    - Predictive order clustering based on histota
+  - **Scenarioline/tracker capacity underutilization
+    - Sn: Dynamic load balancing across drivers
+    -ign orders to optimize overall fleet efficiency
+- ⬜ **Real-time Tracking &ion**
+  - Live driver lation updates using PostGIS
+  -y-turn navigation integration (Goos/Apple Maps)
   - Customer view of driver location on map
-  - Admin view of all active drivers
-  - ETA calculations
-- ⬜ Delivery Completion
-  - Driver marks orders as delivered
+  - Admin view of all active drivers and routes
+  - ETA calculations with traffic consideration
+- ⬜ **Delivery Completion**
+  - Driver marks orders as delivered in sequence
   - Customer confirmation (optional)
   - Admin can override delivery status
-- ⬜ Order Details View (ONLY FOR ACTIVE ORDERS)
-  - driver location
-  - Show delivery address and status
-  - Order timeline/tracking
+  - Route completion analytics
 
 ### **PHASE 4: Enhanced User Experience** 🎯
 - ⬜ Cart Persistence
@@ -124,19 +137,27 @@
 ### **PHASE 5: App Configuration System** ⚙️
 - ⬜ **App Config Table** (Database)
   - Store delivery pricing rules
-  - Store restaurant location(s)
+  - Store supplier location(s) (fish supplier warehouse)
   - Store delivery zone polygon
   - Store business hours
+  - Store default delivery zone center coordinates (for address picker)
+  - max amount of deliveries per driver
+  - amount of drivers
+  - hold order time?
   - Store app settings (min order, max distance, etc.)
+  - Store route optimization settings
 - ⬜ **Admin Config Management**
   - Update delivery fees from admin dashboard
-  - Update restaurant location
+  - Update supplier location
   - Update delivery zone (visual editor)
+  - Update default delivery zone center
   - Update business hours
+  - Configure route optimization parameters
 - ⬜ **Dynamic Configuration**
   - App reads config from database (not hardcoded)
   - Changes take effect immediately
   - No code deployment needed for config changes
+  - Address picker uses configurable default center
 
 ### **PHASE 6: Business Intelligence** 📈
 - ⬜ Analytics Dashboard
