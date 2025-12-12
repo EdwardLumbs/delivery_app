@@ -36,3 +36,11 @@ export const queryClient = new QueryClient({
         },
     },
 })
+
+// Configure specific cache settings for route queries
+queryClient.setQueryDefaults(['route'], {
+    staleTime: 24 * 60 * 60 * 1000, // 24 hours - routes are stable for fish delivery
+    gcTime: 24 * 60 * 60 * 1000, // Keep in cache for 24 hours
+    refetchOnWindowFocus: false, // Don't refetch routes on focus
+    refetchOnReconnect: false, // Don't refetch routes on reconnect
+})

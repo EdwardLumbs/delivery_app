@@ -78,6 +78,10 @@ export interface Order {
     total_price: number
     delivery_fee: number
     delivery_address: any
+    driver_id?: string
+    assigned_at?: string
+    delivery_sequence?: number
+    estimated_delivery_time?: string
     created_at: string
     updated_at: string
 }
@@ -186,6 +190,17 @@ export async function createOrder(params: CreateOrderParams): Promise<Order> {
 
     if (itemsError) throw itemsError
 
+    // Auto-assign order to driver using smart delivery system
+    try {
+        const { handleNewOrder } = await import('./delivery')
+        await handleNewOrder(order.id, deliveryAddress)
+        console.log(`Order ${order.id} successfully assigned to driver`)
+    } catch (error) {
+        console.error('Failed to assign order to driver:', error)
+        // Order is still created, just not assigned yet
+        // This can be handled manually or retried later
+    }
+
     return order as Order
 }
 
@@ -245,4 +260,101 @@ export async function uploadAvatar(userId: string, blob: Blob, ext: string): Pro
         .getPublicUrl(filePath)
 
     return publicUrl
+}
+
+// Delivery-related queries
+export interface Driver {
+    id: string
+    name: string
+    phone?: string
+    email?: string
+    status: 'available' | 'busy' | 'on_delivery' | 'offline'
+    current_orders: number
+    max_concurrent_orders: number
+    current_location?: any
+    last_location_update?: string
+}
+
+export async function getOrderDriver(orderId: string): Promise<Driver | null> {
+    const { data, error } = await supabase
+        .from('orders')
+        .select(`
+            driver_id,
+            drivers!inner(
+                id,
+                name,
+                phone,
+                email,
+                status,
+                current_orders,
+                max_concurrent_orders,
+                current_location,
+                last_location_update
+            )
+        `)
+        .eq('id', orderId)
+        .single()
+
+    if (error) {
+        console.error('Error fetching order driver:', error)
+        return null
+    }
+
+    if (!data?.drivers) {
+        return null
+    }
+
+    // Supabase returns drivers as an array even with inner join
+    const driver = Array.isArray(data.drivers) ? data.drivers[0] : data.drivers
+    return driver as Driver
+}
+
+export async function getDriverLocation(driverId: string): Promise<[number, number] | null> {
+    const { data, error } = await supabase
+        .from('drivers')
+        .select('current_location')
+        .eq('id', driverId)
+        .single()
+
+    if (error || !data?.current_location) {
+        return null
+    }
+
+    // Parse location from PostGIS format
+    try {
+        if (typeof data.current_location === 'string') {
+            const match = data.current_location.match(/POINT\(([^)]+)\)/)
+            if (match) {
+                const [lng, lat] = match[1].split(' ').map(Number)
+                return [lng, lat]
+            }
+        }
+    } catch (error) {
+        console.error('Error parsing driver location:', error)
+    }
+
+    return null
+}
+
+export async function updateOrderStatus(orderId: string, status: string, driverId?: string): Promise<void> {
+    const updates: any = { status }
+    
+    if (driverId) {
+        // Add delivery tracking entry
+        await supabase
+            .from('delivery_tracking')
+            .insert({
+                order_id: orderId,
+                driver_id: driverId,
+                status: status,
+                created_at: new Date().toISOString()
+            })
+    }
+
+    const { error } = await supabase
+        .from('orders')
+        .update(updates)
+        .eq('id', orderId)
+
+    if (error) throw error
 }
